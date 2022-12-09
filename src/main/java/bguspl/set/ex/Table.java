@@ -2,9 +2,13 @@ package bguspl.set.ex;
 
 import bguspl.set.Env;
 
+import java.security.spec.EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +33,10 @@ public class Table {
      */
     protected final Integer[] cardToSlot; // slot per card (if any)
 
+    private Queue<Integer> [] pQueues; //array of queues --> tokens for each player
+
+    private Queue<Integer>pIdqQueue; // Queue of players who reached 3 tokens
+    
     /**
      * Constructor for testing.
      *
@@ -41,6 +49,12 @@ public class Table {
         this.env = env;
         this.slotToCard = slotToCard;
         this.cardToSlot = cardToSlot;
+        pQueues = new Queue[env.config.players];
+        for (int i = 0; i < env.config.players; i++) {
+            pQueues[i] = new ConcurrentLinkedQueue<Integer>();
+        }
+        pIdqQueue = new ConcurrentLinkedQueue<Integer>();
+        
     }
 
     /**
@@ -95,6 +109,7 @@ public class Table {
         slotToCard[slot] = card;
 
         // TODO implement
+        env.ui.placeCard(card, slot);
     }
 
     /**
@@ -106,6 +121,9 @@ public class Table {
             Thread.sleep(env.config.tableDelayMillis);
         } catch (InterruptedException ignored) {}
 
+
+        slotToCard[slot] = env.config.emptySlot;
+        env.ui.removeCard(slot);
         // TODO implement
     }
 
@@ -115,7 +133,12 @@ public class Table {
      * @param slot   - the slot on which to place the token.
      */
     public void placeToken(int player, int slot) {
-        // TODO implement
+        
+        pQueues[player].add(slot);
+        env.ui.placeToken(player, slot);
+
+        if(pQueues[player].size()==3)
+            pIdqQueue.add(player);
     }
 
     /**
@@ -125,7 +148,60 @@ public class Table {
      * @return       - true iff a token was successfully removed.
      */
     public boolean removeToken(int player, int slot) {
-        // TODO implement
+        pQueues[player].remove(slot);
+        env.ui.removeToken(player, slot);
         return false;
+    }
+
+    public int checkSet()
+    {
+        if(!pIdqQueue.isEmpty())
+        {
+            int playerId = pIdqQueue.poll();
+            int [] playersCards = new int [env.config.tokenToSet]; 
+
+            for (int i = 0; i < playersCards.length; i++) {
+                playersCards[i]=pQueues[playerId].poll();
+                pQueues[playerId].add(playersCards[i]);
+            }
+        
+            if(env.util.testSet(playersCards))
+            {
+                ////// good
+                pIdqQueue.remove(playerId);
+
+                ///remove tokens
+                for (int i = 0; i < env.config.tokenToSet; i++) {
+                    removeToken(playerId, pQueues[playerId].poll());
+                }
+                /// remove cards
+                for (int i = 0; i < playersCards.length; i++) {
+                    removeCard(cardToSlot[playersCards[i]]);
+                }
+                pQueues[playerId].clear();
+                ///score player
+                return playerId;
+                
+            }
+            else
+            {
+                return env.config.badSet*playerId; 
+            }
+            
+        }
+        return env.config.notSetToCheck;
+    }
+
+    public void place_3_cards(int [] cards)
+    {
+        int counter =0 ;
+        for (int i = 0; i < slotToCard.length & counter<env.config.tokenToSet; i++) {
+            if(slotToCard[i]==env.config.emptySlot)
+            {
+                cardToSlot[i] = cards[counter];
+                placeCard(cards[counter],i);
+                counter++;
+            }
+        }
     }
 }

@@ -10,6 +10,8 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.UIDefaults.ProxyLazyValue;
+
 /**
  * This class holds all the game's configuration data
  */
@@ -121,6 +123,13 @@ public class Config {
      */
     public final int fontSize;
 
+    public final int tokenToSet;
+    public final int emptySlot;
+    public final int badSet;
+    public final int notSetToCheck;
+    public final int goodSet;
+    
+
     /**
      * The scancodes of the keyboard input data for each player
      * Notes:
@@ -199,6 +208,16 @@ public class Config {
         PlayerCellWidth = Integer.parseInt(properties.getProperty("PlayerCellWidth", "300"));
         PlayerCellHeight = Integer.parseInt(properties.getProperty("PlayerCellHeight", "40"));
         fontSize = Integer.parseInt(properties.getProperty("FontSize", "40"));
+
+        /////////////////////////////////////////////////////////////////////////////////////////
+        tokenToSet = Integer.parseInt(properties.getProperty("TokenToSet", "3"));
+        emptySlot = Integer.parseInt(properties.getProperty("EmptySlot", "-1"));
+
+        badSet = Integer.parseInt(properties.getProperty("BadSet", "-1"));
+        notSetToCheck=Integer.parseInt(properties.getProperty("NotSetToCheck", "-3"));
+        goodSet=Integer.parseInt(properties.getProperty("GoodSet", "0"));
+
+        /////////////////////////////////////////////////////////////////////////////////////////
 
         // keyboard input data
         playerKeys = new int[players][rows * columns];

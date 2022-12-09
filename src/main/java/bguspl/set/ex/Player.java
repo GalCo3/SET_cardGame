@@ -1,5 +1,7 @@
 package bguspl.set.ex;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 
 import bguspl.set.Env;
@@ -52,6 +54,9 @@ public class Player implements Runnable {
      */
     private int score;
 
+    private Queue<Integer> tokQueue;
+    
+
     /**
      * The class constructor.
      *
@@ -66,6 +71,8 @@ public class Player implements Runnable {
         this.table = table;
         this.id = id;
         this.human = human;
+
+        tokQueue=  new ConcurrentLinkedQueue<Integer>();
     }
 
     /**
@@ -117,6 +124,17 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         // TODO implement
+        if(tokQueue.contains(slot))
+            {
+                table.removeToken(id, slot);
+                tokQueue.remove(slot);
+            }
+        else
+            {
+                table.placeToken(id, slot);
+                tokQueue.add(slot);
+            }
+
     }
 
     /**
@@ -127,7 +145,7 @@ public class Player implements Runnable {
      */
     public void point() {
         // TODO implement
-
+        tokQueue.clear();
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
     }

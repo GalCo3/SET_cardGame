@@ -3,9 +3,15 @@ package bguspl.set.ex;
 import bguspl.set.Env;
 
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+
 
 /**
  * This class manages the dealer's threads and data
@@ -22,7 +28,7 @@ public class Dealer implements Runnable {
      */
     private final Table table;
     private final Player[] players;
-
+    
     /**
      * The list of card ids that are left in the dealer's deck.
      */
@@ -38,11 +44,15 @@ public class Dealer implements Runnable {
      */
     private long reshuffleTime = Long.MAX_VALUE;
 
+    
+
     public Dealer(Env env, Table table, Player[] players) {
         this.env = env;
         this.table = table;
         this.players = players;
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
+
+        
     }
 
     /**
@@ -51,6 +61,8 @@ public class Dealer implements Runnable {
     @Override
     public void run() {
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " starting.");
+        
+
         while (!shouldFinish()) {
             placeCardsOnTable();
             timerLoop();
@@ -101,13 +113,52 @@ public class Dealer implements Runnable {
      */
     private void placeCardsOnTable() {
         // TODO implement
+        // Collections.shuffle(deck);
+        List<Integer> temp = new ArrayList<Integer>();
+        for (int i = 0; i < env.config.tableSize; i++) {
+            table.placeCard(deck.get(i), i);
+            temp.add(deck.get(i));
+        }
+
+        for (int i = 0; i < env.config.tableSize; i++) {
+            deck.remove(temp.get(i));
+        }
+
     }
+
+    
+
+
 
     /**
      * Sleep for a fixed amount of time or until the thread is awakened for some purpose.
      */
     private void sleepUntilWokenOrTimeout() {
-        // TODO implement
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ignored) {}
+
+        int check = table.checkSet();
+
+        if(check != env.config.notSetToCheck)
+        {
+            if(check>=env.config.goodSet)
+            {
+                //HINT: check is Player ID
+                players[check].point();
+                int [] cards =new int[3] ;
+
+                cards[0] = deck.get(0);
+                cards[1] = deck.get(1);
+                cards[2] = deck.get(2);
+                
+                table.place_3_cards(cards);
+            }
+        }
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ignored) {}
     }
 
     /**
