@@ -1,5 +1,6 @@
 package bguspl.set.ex;
 
+import bguspl.set.Config;
 import bguspl.set.Env;
 
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.security.interfaces.ECKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,6 +41,8 @@ public class Dealer implements Runnable {
      */
     private volatile boolean terminate;
 
+    private int count;
+
     /**
      * The time when the dealer needs to reshuffle the deck due to turn timeout.
      */
@@ -51,7 +55,7 @@ public class Dealer implements Runnable {
         this.table = table;
         this.players = players;
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
-
+        count=0;
         
     }
 
@@ -62,11 +66,11 @@ public class Dealer implements Runnable {
     public void run() {
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " starting.");
         
-
         while (!shouldFinish()) {
+            count = 0;
             placeCardsOnTable();
             timerLoop();
-            updateTimerDisplay(false);
+            updateTimerDisplay(true);
             removeAllCardsFromTable();
         }
         announceWinners();
@@ -80,8 +84,8 @@ public class Dealer implements Runnable {
         while (!terminate && System.currentTimeMillis() < reshuffleTime) {
             sleepUntilWokenOrTimeout();
             updateTimerDisplay(false);
-            removeCardsFromTable();
-            placeCardsOnTable();
+            // removeCardsFromTable();
+            // placeCardsOnEmptySlots();
         }
     }
 
@@ -106,7 +110,12 @@ public class Dealer implements Runnable {
      */
     private void removeCardsFromTable() {
         // TODO implement
+        List<Integer> tableDeck = table.removeCards();
+        for (int i = 0; i < tableDeck.size(); i++) {
+            deck.add(tableDeck.get(i));
+        }
     }
+
 
     /**
      * Check if any cards can be removed from the deck and placed on the table.
@@ -134,31 +143,38 @@ public class Dealer implements Runnable {
      * Sleep for a fixed amount of time or until the thread is awakened for some purpose.
      */
     private void sleepUntilWokenOrTimeout() {
+        
         try {
-            Thread.sleep(3000);
+            Thread.sleep(100);
         } catch (InterruptedException ignored) {}
 
-        int check = table.checkSet();
+        int [] check = table.checkSet();
 
-        if(check != env.config.notSetToCheck)
+        if(check[env.config.firstTupleElm] != env.config.notSetToCheck)
         {
-            if(check>=env.config.goodSet)
+            if(check[env.config.firstTupleElm]==env.config.goodSet)
             {
                 //HINT: check is Player ID
-                players[check].point();
-                int [] cards =new int[3] ;
+                players[check[env.config.secondTupleElm]].setFlag(env.config.goodSet);
 
-                cards[0] = deck.get(0);
-                cards[1] = deck.get(1);
-                cards[2] = deck.get(2);
-                
-                table.place_3_cards(cards);
+                if(deck.size()>=env.config.tokenToSet)
+                {
+                    int [] cards =new int[env.config.tokenToSet] ;
+
+                    cards[env.config.firstCard] = deck.get(env.config.firstCard);
+                    cards[env.config.secondCard] = deck.get(env.config.secondCard);
+                    cards[env.config.thirdCard] = deck.get(env.config.thirdCard);
+                    
+                    table.place_3_cards(cards);
+                }
+            }
+            else
+            {
+                ////// BAD SET
+                players[check[env.config.secondTupleElm]].setFlag(env.config.badSet);
             }
         }
 
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException ignored) {}
     }
 
     /**
@@ -166,6 +182,12 @@ public class Dealer implements Runnable {
      */
     private void updateTimerDisplay(boolean reset) {
         // TODO implement
+
+        try {
+            Thread.sleep(900);
+        } catch (InterruptedException ignored) {}
+        env.ui.setCountdown(env.config.turnTimeoutMillis -count*env.config.oneSec, reset);
+        count++;
     }
 
     /**

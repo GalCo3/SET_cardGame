@@ -128,6 +128,18 @@ public class Config {
     public final int badSet;
     public final int notSetToCheck;
     public final int goodSet;
+
+    public final int firstCard;
+    public final int secondCard;
+    public final int thirdCard;
+    public final int tupleSize;
+    public final int firstTupleElm;
+    public final int secondTupleElm;
+    public final int resetFreeze;
+    public final int penaltyCount;
+    public final int oneSec;
+    public final int halfSec;
+    public final int neutralFlag;
     
 
     /**
@@ -208,6 +220,7 @@ public class Config {
         PlayerCellWidth = Integer.parseInt(properties.getProperty("PlayerCellWidth", "300"));
         PlayerCellHeight = Integer.parseInt(properties.getProperty("PlayerCellHeight", "40"));
         fontSize = Integer.parseInt(properties.getProperty("FontSize", "40"));
+        
 
         /////////////////////////////////////////////////////////////////////////////////////////
         tokenToSet = Integer.parseInt(properties.getProperty("TokenToSet", "3"));
@@ -215,7 +228,22 @@ public class Config {
 
         badSet = Integer.parseInt(properties.getProperty("BadSet", "-1"));
         notSetToCheck=Integer.parseInt(properties.getProperty("NotSetToCheck", "-3"));
-        goodSet=Integer.parseInt(properties.getProperty("GoodSet", "0"));
+        goodSet=Integer.parseInt(properties.getProperty("GoodSet", "1"));
+
+        firstCard=Integer.parseInt(properties.getProperty("FirstCard", "0"));
+        secondCard=Integer.parseInt(properties.getProperty("SecondCard", "1"));
+        thirdCard=Integer.parseInt(properties.getProperty("ThirdCard", "2"));
+
+        tupleSize = Integer.parseInt(properties.getProperty("TupleSize", "2"));
+        firstTupleElm = Integer.parseInt(properties.getProperty("FirstTupleElm", "0"));
+        secondTupleElm = Integer.parseInt(properties.getProperty("SecondTupleElm", "1"));
+
+        resetFreeze= Integer.parseInt(properties.getProperty("ResetFreeze", "-1"));
+        penaltyCount = Integer.parseInt(properties.getProperty("PenaltyCount", "3"));
+        oneSec =  Integer.parseInt(properties.getProperty("OneSec", "1000"));
+        halfSec = Integer.parseInt(properties.getProperty("HalfSec", "500"));
+
+        neutralFlag = Integer.parseInt(properties.getProperty("NeutralFlag", "0"));
 
         /////////////////////////////////////////////////////////////////////////////////////////
 

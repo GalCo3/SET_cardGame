@@ -1,5 +1,6 @@
 package bguspl.set.ex;
 
+import java.security.spec.EncodedKeySpec;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
@@ -55,6 +56,8 @@ public class Player implements Runnable {
     private int score;
 
     private Queue<Integer> tokQueue;
+
+    private int flag;
     
 
     /**
@@ -86,6 +89,8 @@ public class Player implements Runnable {
 
         while (!terminate) {
             // TODO implement main player loop
+            pointOrPenalty();
+            
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
@@ -137,27 +142,70 @@ public class Player implements Runnable {
 
     }
 
+    public void setFlag(int num)
+    {
+        flag = num;
+    }
+
+    public void pointOrPenalty ()
+    {
+        if(flag == env.config.goodSet)
+            {
+                point();
+                flag = env.config.neutralFlag;
+            }
+        else if(flag == env.config.badSet)
+            {
+                penalty();
+                flag = env.config.neutralFlag;
+            }                
+    }
+
     /**
      * Award a point to a player and perform other related actions.
      *
      * @post - the player's score is increased by 1.
      * @post - the player's score is updated in the ui.
      */
-    public void point() {
+    public void point() { /////need sync
         // TODO implement
         tokQueue.clear();
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
+        env.ui.setFreeze(id, env.config.pointFreezeMillis);
+
+        try {
+            Thread.sleep(env.config.pointFreezeMillis);
+        } catch (InterruptedException ign) {}
+
+        env.ui.setFreeze(id, env.config.resetFreeze);
     }
 
     /**
      * Penalize a player and perform other related actions.
      */
-    public void penalty() {
+    public void penalty() { ///need sync
         // TODO implement
+        int count = 0 ;
+
+        while(count<env.config.penaltyCount)
+        {
+            env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * env.config.oneSec);
+            
+            try {
+                Thread.sleep(env.config.pointFreezeMillis);
+            } catch (InterruptedException ignored) {}
+            count++;
+        }  
+        env.ui.setFreeze(id, env.config.resetFreeze);
     }
 
     public int getScore() {
         return score;
+    }
+
+    public void removeAllTokens()
+    {
+        tokQueue.clear();
     }
 }

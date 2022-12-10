@@ -9,7 +9,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.ObjDoubleConsumer;
 import java.util.stream.Collectors;
+
+
+import javax.swing.UIDefaults.ProxyLazyValue;
 
 /**
  * This class contains the data that is visible to the player.
@@ -133,12 +137,14 @@ public class Table {
      * @param slot   - the slot on which to place the token.
      */
     public void placeToken(int player, int slot) {
-        
-        pQueues[player].add(slot);
-        env.ui.placeToken(player, slot);
+        if(pQueues[player].size()<env.config.tokenToSet)
+        {
+            pQueues[player].add(slot);
+            env.ui.placeToken(player, slot);
 
-        if(pQueues[player].size()==3)
-            pIdqQueue.add(player);
+            if(pQueues[player].size()==3)
+                pIdqQueue.add(player);
+        }
     }
 
     /**
@@ -153,16 +159,18 @@ public class Table {
         return false;
     }
 
-    public int checkSet()
+    public int[] checkSet()
     {
+        int [] out = new int[env.config.tupleSize];
         if(!pIdqQueue.isEmpty())
         {
+            
             int playerId = pIdqQueue.poll();
             int [] playersCards = new int [env.config.tokenToSet]; 
 
             for (int i = 0; i < playersCards.length; i++) {
-                playersCards[i]=pQueues[playerId].poll();
-                pQueues[playerId].add(playersCards[i]);
+                playersCards[i]=slotToCard[pQueues[playerId].poll()];
+                pQueues[playerId].add(cardToSlot[playersCards[i]]);
             }
         
             if(env.util.testSet(playersCards))
@@ -180,16 +188,22 @@ public class Table {
                 }
                 pQueues[playerId].clear();
                 ///score player
-                return playerId;
+                out[env.config.firstTupleElm] = env.config.goodSet;
+                out[env.config.secondTupleElm] = playerId;
+                return out;
                 
             }
             else
             {
-                return env.config.badSet*playerId; 
+                out[env.config.firstTupleElm] = env.config.badSet;
+                out[env.config.secondTupleElm] = playerId;
+                return out; 
             }
             
         }
-        return env.config.notSetToCheck;
+        out[env.config.firstTupleElm] =env.config.notSetToCheck;
+        out[env.config.secondTupleElm] =env.config.notSetToCheck;
+        return out;
     }
 
     public void place_3_cards(int [] cards)
@@ -203,5 +217,27 @@ public class Table {
                 counter++;
             }
         }
+    }
+
+    public List<Integer> removeCards ()
+    {
+        env.ui.removeTokens();
+
+        List<Integer> out = new ArrayList<>();
+        for (int i = 0; i < slotToCard.length; i++) {
+            if(slotToCard[i]!=env.config.emptySlot)
+                {
+                    out.add(slotToCard[i]);
+                    removeCard(i);
+                    env.ui.removeCard(i);
+                }
+        }
+        for (int i = 0; i < pQueues.length; i++) {
+            pQueues[i].clear();
+        }
+        pIdqQueue.clear();
+        return out;
+
+
     }
 }
