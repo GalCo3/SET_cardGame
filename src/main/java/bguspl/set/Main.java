@@ -43,10 +43,7 @@ public class Main {
         // start the dealer thread
         Thread dealerThread = new Thread(dealer, "dealer");
         dealerThread.start();
-        /////////////////
-        Thread playerThread = new Thread(players[0],"meni");
-        playerThread.start();
-        ////////////////
+        
 
         try {dealerThread.join();} catch (InterruptedException ignored) {}
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");

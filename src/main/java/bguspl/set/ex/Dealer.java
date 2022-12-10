@@ -42,6 +42,7 @@ public class Dealer implements Runnable {
     private volatile boolean terminate;
 
     private int count;
+    private boolean wasSet;
 
     /**
      * The time when the dealer needs to reshuffle the deck due to turn timeout.
@@ -56,7 +57,8 @@ public class Dealer implements Runnable {
         this.players = players;
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
         count=0;
-        
+        wasSet=false;
+        // reshuffleTime = env.config.turnTimeoutMillis;
     }
 
     /**
@@ -65,13 +67,20 @@ public class Dealer implements Runnable {
     @Override
     public void run() {
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " starting.");
+
+        Thread [] p  =  new Thread[env.config.players];
         
+        for (int i = 0; i < p.length; i++) {
+            p[i] = new Thread(players[i]);
+            p[i].start();
+        }
+
         while (!shouldFinish()) {
             count = 0;
             placeCardsOnTable();
             timerLoop();
             updateTimerDisplay(true);
-            removeAllCardsFromTable();
+            removeCardsFromTable();
         }
         announceWinners();
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
@@ -145,16 +154,16 @@ public class Dealer implements Runnable {
     private void sleepUntilWokenOrTimeout() {
         
         try {
-            Thread.sleep(100);
+            Thread.sleep(400);
         } catch (InterruptedException ignored) {}
 
         int [] check = table.checkSet();
-
+        wasSet = false;
         if(check[env.config.firstTupleElm] != env.config.notSetToCheck)
         {
             if(check[env.config.firstTupleElm]==env.config.goodSet)
             {
-                //HINT: check is Player ID
+                wasSet = true;
                 players[check[env.config.secondTupleElm]].setFlag(env.config.goodSet);
 
                 if(deck.size()>=env.config.tokenToSet)
@@ -162,8 +171,14 @@ public class Dealer implements Runnable {
                     int [] cards =new int[env.config.tokenToSet] ;
 
                     cards[env.config.firstCard] = deck.get(env.config.firstCard);
-                    cards[env.config.secondCard] = deck.get(env.config.secondCard);
-                    cards[env.config.thirdCard] = deck.get(env.config.thirdCard);
+                    deck.remove(env.config.firstCard);
+
+                    cards[env.config.secondCard] = deck.get(env.config.firstCard);
+                    deck.remove(env.config.firstCard);
+                    
+                    cards[env.config.thirdCard] = deck.get(env.config.firstCard);
+                    deck.remove(env.config.firstCard);
+                    
                     
                     table.place_3_cards(cards);
                 }
@@ -172,6 +187,7 @@ public class Dealer implements Runnable {
             {
                 ////// BAD SET
                 players[check[env.config.secondTupleElm]].setFlag(env.config.badSet);
+                wasSet = false;
             }
         }
 
@@ -182,20 +198,23 @@ public class Dealer implements Runnable {
      */
     private void updateTimerDisplay(boolean reset) {
         // TODO implement
-
+        if(!wasSet)
+        {
         try {
-            Thread.sleep(900);
+            Thread.sleep(600);
         } catch (InterruptedException ignored) {}
+        }
         env.ui.setCountdown(env.config.turnTimeoutMillis -count*env.config.oneSec, reset);
         count++;
+        wasSet = false;
     }
 
-    /**
-     * Returns all the cards from the table to the deck.
-     */
-    private void removeAllCardsFromTable() {
-        // TODO implement
-    }
+    // /**
+    //  * Returns all the cards from the table to the deck.
+    //  */
+    // private void removeAllCardsFromTable() {
+    //     // TODO implement
+    // }
 
     /**
      * Check who is/are the winner/s and displays them.

@@ -175,7 +175,7 @@ public class Player implements Runnable {
         env.ui.setFreeze(id, env.config.pointFreezeMillis);
 
         try {
-            Thread.sleep(env.config.pointFreezeMillis);
+            playerThread.sleep(env.config.pointFreezeMillis);
         } catch (InterruptedException ign) {}
 
         env.ui.setFreeze(id, env.config.resetFreeze);
@@ -193,7 +193,7 @@ public class Player implements Runnable {
             env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * env.config.oneSec);
             
             try {
-                Thread.sleep(env.config.pointFreezeMillis);
+                playerThread.sleep(env.config.pointFreezeMillis);
             } catch (InterruptedException ignored) {}
             count++;
         }  
