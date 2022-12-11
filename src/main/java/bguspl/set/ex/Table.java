@@ -97,6 +97,20 @@ public class Table {
         return cards;
     }
 
+    public boolean isCard(int slot)
+    {
+        return slotToCard[slot] != env.config.emptySlot;
+    }
+
+    public boolean empty_Table()
+    {
+        for (int i = 0; i < slotToCard.length; i++) {
+            if(slotToCard[i] != env.config.emptySlot)
+                return false;
+        }
+        return true;
+    }
+
     /**
      * Places a card on the table in a grid slot.
      * @param card - the card id to place in the slot.

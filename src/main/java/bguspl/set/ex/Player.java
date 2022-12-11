@@ -129,12 +129,12 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         // TODO implement
-        if(tokQueue.contains(slot))
+        if(tokQueue.contains(slot) & table.isCard(slot))
             {
                 table.removeToken(id, slot);
                 tokQueue.remove(slot);
             }
-        else
+        else if(table.isCard(slot))
             {
                 table.placeToken(id, slot);
                 tokQueue.add(slot);
@@ -175,7 +175,7 @@ public class Player implements Runnable {
         env.ui.setFreeze(id, env.config.pointFreezeMillis);
 
         try {
-            playerThread.sleep(env.config.pointFreezeMillis);
+            this.playerThread.sleep(env.config.pointFreezeMillis);
         } catch (InterruptedException ign) {}
 
         env.ui.setFreeze(id, env.config.resetFreeze);
@@ -193,7 +193,7 @@ public class Player implements Runnable {
             env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * env.config.oneSec);
             
             try {
-                playerThread.sleep(env.config.pointFreezeMillis);
+                this.playerThread.sleep(env.config.pointFreezeMillis);
             } catch (InterruptedException ignored) {}
             count++;
         }  
