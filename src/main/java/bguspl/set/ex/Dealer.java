@@ -9,6 +9,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.xml.sax.ext.DeclHandler;
+
 import java.security.interfaces.ECKey;
 import java.security.spec.EncodedKeySpec;
 import java.util.ArrayList;
@@ -77,8 +80,9 @@ public class Dealer implements Runnable {
         }
 
         while (!shouldFinish()) {
-            count = 0;
+            freezeAllPlayers();
             placeCardsOnTable();
+            unfreezeAllPlayers();
             timerLoop();
             updateTimerDisplay(true);
             removeCardsFromTable();
@@ -100,6 +104,19 @@ public class Dealer implements Runnable {
         }
     }
 
+    private void freezeAllPlayers()
+    {
+        for (int i = 0; i < players.length; i++) {
+            players[i].freeze();
+        }
+    }
+
+    private void unfreezeAllPlayers()
+    {
+        for (int i = 0; i < players.length; i++) {
+            players[i].unfreeze();
+        }
+    }
     /**
      * Called when the game should be terminated due to an external event.
      */
@@ -121,10 +138,13 @@ public class Dealer implements Runnable {
      */
     private void removeCardsFromTable() {
         // TODO implement
-        List<Integer> tableDeck = table.removeCards();
-        for (int i = 0; i < tableDeck.size(); i++) {
-            deck.add(tableDeck.get(i));
-        }
+        // synchronized(table.lock)
+        // {
+            List<Integer> tableDeck = table.removeCards();
+            for (int i = 0; i < tableDeck.size(); i++) {
+                deck.add(tableDeck.get(i));
+            }
+        // }
     }
 
 
@@ -133,16 +153,21 @@ public class Dealer implements Runnable {
      */
     private void placeCardsOnTable() {
         // TODO implement
-        // Collections.shuffle(deck);
-        List<Integer> temp = new ArrayList<Integer>();
-        for (int i = 0; i < env.config.tableSize & i<deck.size(); i++) {
-            table.placeCard(deck.get(i), i);
-            temp.add(deck.get(i));
-        }
 
-        for (int i = 0; i < env.config.tableSize & i<deck.size(); i++) {
-            deck.remove(temp.get(i));
-        }
+        // synchronized(table.lock){
+        // Collections.shuffle(deck);
+            List<Integer> temp = new ArrayList<Integer>();
+            for (int i = 0; i < env.config.tableSize & i<deck.size(); i++) {
+                table.placeCard(deck.get(i), i);
+                temp.add(deck.get(i));
+            }
+            int size = deck.size();
+            for (int i = 0; i < env.config.tableSize & i<size; i++) 
+            {
+                deck.remove(temp.get(i));
+            }
+        // }
+
 
     }
 
@@ -159,15 +184,16 @@ public class Dealer implements Runnable {
             Thread.sleep(100);
         } catch (InterruptedException ignored) {}
 
-        int [] check = table.checkSet();
+        int [] check=table.checkSet();
         wasSet = false;
+
         if(check[env.config.firstTupleElm] != env.config.notSetToCheck)
         {
             if(check[env.config.firstTupleElm]==env.config.goodSet)
             {
                 wasSet = true;
                 players[check[env.config.secondTupleElm]].setFlag(env.config.goodSet);
-
+                // players[check[env.config.secondTupleElm]].locObject.notifyAll();
                 if(deck.size()>=env.config.tokenToSet)
                 {
                     int [] cards =new int[env.config.tokenToSet] ;
@@ -200,6 +226,10 @@ public class Dealer implements Runnable {
                 wasSet = false;
             }
         }
+        else if (check[env.config.secondTupleElm] != env.config.notSetToCheck)
+        {
+            players[check[env.config.secondTupleElm]].removeAllTokens();
+        }
 
     }
 
@@ -211,13 +241,12 @@ public class Dealer implements Runnable {
         if(reset|| wasSet)
         {
             reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis + env.config.halfSec +200;
-            count = 0;
-            env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), false); // -count*env.config.oneSec
+            env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), false);
         }
         else 
         {
-            env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), false); // -count*env.config.oneSec
-            count++;
+            Boolean tenSec = reshuffleTime - System.currentTimeMillis() <=10000; 
+            env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), tenSec);
             wasSet = false;
         }        
     }

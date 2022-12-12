@@ -58,7 +58,8 @@ public class Player implements Runnable {
     private Queue<Integer> tokQueue;
 
     private int flag;
-    
+    private boolean freeze;
+    public Object locObject;
 
     /**
      * The class constructor.
@@ -76,6 +77,8 @@ public class Player implements Runnable {
         this.human = human;
 
         tokQueue=  new ConcurrentLinkedQueue<Integer>();
+        freeze = false;
+        locObject = new Object();
     }
 
     /**
@@ -89,7 +92,15 @@ public class Player implements Runnable {
 
         while (!terminate) {
             // TODO implement main player loop
-            pointOrPenalty();
+            // synchronized(locObject){
+            // try{
+            //     locObject.wait();}
+            //     catch(InterruptedException i){
+            //     }
+                pointOrPenalty();
+
+            // }
+            
             
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
@@ -129,17 +140,21 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         // TODO implement
-        if(tokQueue.contains(slot) & table.isCard(slot))
+        if(!freeze)
+        {
+            
+            if(tokQueue.contains(slot) & table.isCard(slot))
             {
                 table.removeToken(id, slot);
                 tokQueue.remove(slot);
             }
-        else if(table.isCard(slot))
+            else if(table.isCard(slot))
             {
                 table.placeToken(id, slot);
                 tokQueue.add(slot);
             }
-
+            
+        }
     }
 
     public void setFlag(int num)
@@ -173,11 +188,11 @@ public class Player implements Runnable {
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
         env.ui.setFreeze(id, env.config.pointFreezeMillis);
-
+        freeze = true;
         try {
             this.playerThread.sleep(env.config.pointFreezeMillis);
         } catch (InterruptedException ign) {}
-
+        freeze = false;
         env.ui.setFreeze(id, env.config.resetFreeze);
     }
 
@@ -187,7 +202,7 @@ public class Player implements Runnable {
     public void penalty() { ///need sync
         // TODO implement
         int count = 0 ;
-
+        freeze = true;
         while(count<env.config.penaltyCount)
         {
             env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * env.config.oneSec);
@@ -196,7 +211,8 @@ public class Player implements Runnable {
                 this.playerThread.sleep(env.config.pointFreezeMillis);
             } catch (InterruptedException ignored) {}
             count++;
-        }  
+        } 
+        freeze = false; 
         env.ui.setFreeze(id, env.config.resetFreeze);
     }
 
@@ -207,5 +223,15 @@ public class Player implements Runnable {
     public void removeAllTokens()
     {
         tokQueue.clear();
+    }
+
+    public void freeze()
+    {
+        freeze = true;
+    }
+
+    public void unfreeze()
+    {
+        freeze = false;
     }
 }

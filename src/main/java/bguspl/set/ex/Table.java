@@ -1,10 +1,13 @@
 package bguspl.set.ex;
 
 import bguspl.set.Env;
+import bguspl.set.Util;
 
+import java.io.UTFDataFormatException;
 import java.security.spec.EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
@@ -40,6 +43,8 @@ public class Table {
     private Queue<Integer> [] pQueues; //array of queues --> tokens for each player
 
     private Queue<Integer>pIdqQueue; // Queue of players who reached 3 tokens
+
+    public Object lock ; 
     
     /**
      * Constructor for testing.
@@ -58,7 +63,7 @@ public class Table {
             pQueues[i] = new ConcurrentLinkedQueue<Integer>();
         }
         pIdqQueue = new ConcurrentLinkedQueue<Integer>();
-        
+        lock = new Object();   
     }
 
     /**
@@ -140,9 +145,26 @@ public class Table {
         } catch (InterruptedException ignored) {}
 
 
-        slotToCard[slot] = env.config.emptySlot;
         env.ui.removeCard(slot);
         // TODO implement
+        for (int i = 0; i < pQueues.length; i++) {
+            if(pQueues[i].contains(slotToCard[slot]))
+            {
+                pQueues[i].remove(slotToCard[slot]);
+                // pIdqQueue.remove(i);
+                env.ui.removeToken(i, slot);
+            }
+        }
+        slotToCard[slot] = env.config.emptySlot;
+    }
+
+    private boolean cardOnTable(int card)
+    {
+        for (int i = 0; i < slotToCard.length; i++) {
+            if(slotToCard[i] == card)
+                return true;
+        }
+        return false;
     }
 
     /**
@@ -153,7 +175,7 @@ public class Table {
     public void placeToken(int player, int slot) {
         if(pQueues[player].size()<env.config.tokenToSet)
         {
-            pQueues[player].add(slot);
+            pQueues[player].add(slotToCard[slot]);
             env.ui.placeToken(player, slot);
 
             if(pQueues[player].size()==3)
@@ -168,7 +190,7 @@ public class Table {
      * @return       - true iff a token was successfully removed.
      */
     public boolean removeToken(int player, int slot) {
-        pQueues[player].remove(slot);
+        pQueues[player].remove(slotToCard[slot]);
         env.ui.removeToken(player, slot);
         return false;
     }
@@ -178,24 +200,33 @@ public class Table {
         int [] out = new int[env.config.tupleSize];
         if(!pIdqQueue.isEmpty())
         {
-            
+            // boolean tooLate = false;
             int playerId = pIdqQueue.poll();
+            if(pQueues[playerId].isEmpty())
+            {
+                out[env.config.firstTupleElm] =env.config.notSetToCheck;
+                out[env.config.secondTupleElm] =playerId;
+                return out;
+            }
+
             int [] playersCards = new int [env.config.tokenToSet]; 
 
+            
             for (int i = 0; i < playersCards.length; i++) {
-                playersCards[i]=slotToCard[pQueues[playerId].poll()];
-                pQueues[playerId].add(cardToSlot[playersCards[i]]);
+                playersCards[i]=pQueues[playerId].poll();
+                pQueues[playerId].add(playersCards[i]);
             }
-        
+
+            
+            
             if(env.util.testSet(playersCards))
             {
                 ////// good
-                pIdqQueue.remove(playerId);
 
                 ///remove tokens
-                for (int i = 0; i < env.config.tokenToSet; i++) {
-                    removeToken(playerId, pQueues[playerId].poll());
-                }
+                // for (int i = 0; i < env.config.tokenToSet; i++) {
+                //     removeToken(playerId, cardToSlot[pQueues[playerId].poll()]);
+                // }
                 /// remove cards
                 for (int i = 0; i < playersCards.length; i++) {
                     removeCard(cardToSlot[playersCards[i]]);
@@ -214,6 +245,7 @@ public class Table {
                 return out; 
             }
             
+            
         }
         out[env.config.firstTupleElm] =env.config.notSetToCheck;
         out[env.config.secondTupleElm] =env.config.notSetToCheck;
@@ -226,7 +258,8 @@ public class Table {
         for (int i = 0; i < slotToCard.length & counter<env.config.tokenToSet; i++) {
             if(slotToCard[i]==env.config.emptySlot)
             {
-                cardToSlot[i] = cards[counter];
+                //cardToSlot[i] = cards[counter];
+                // slotToCard[i] = cards[counter];
                 placeCard(cards[counter],i);
                 counter++;
             }
