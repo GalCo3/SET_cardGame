@@ -116,6 +116,14 @@ public class Table {
         return true;
     }
 
+    public boolean playerContainsToken(int slot,int playerId)
+    {
+        if(pQueues[playerId].contains(slotToCard[slot]))
+            return true;
+
+        return false;
+    }
+
     /**
      * Places a card on the table in a grid slot.
      * @param card - the card id to place in the slot.
@@ -200,9 +208,9 @@ public class Table {
         int [] out = new int[env.config.tupleSize];
         if(!pIdqQueue.isEmpty())
         {
-            // boolean tooLate = false;
+            
             int playerId = pIdqQueue.poll();
-            if(pQueues[playerId].isEmpty())
+            if(pQueues[playerId].size() < env.config.tokenToSet)
             {
                 out[env.config.firstTupleElm] =env.config.notSetToCheck;
                 out[env.config.secondTupleElm] =playerId;

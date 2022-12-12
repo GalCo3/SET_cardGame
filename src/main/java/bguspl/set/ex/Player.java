@@ -1,9 +1,13 @@
 package bguspl.set.ex;
 
 import java.security.spec.EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
+
+import javax.swing.UIDefaults.ProxyLazyValue;
 
 import bguspl.set.Env;
 
@@ -92,19 +96,27 @@ public class Player implements Runnable {
 
         while (!terminate) {
             // TODO implement main player loop
-            // synchronized(locObject){
-            // try{
-            //     locObject.wait();}
-            //     catch(InterruptedException i){
-            //     }
-                pointOrPenalty();
-
-            // }
-            
-            
+            pointOrPenalty();            
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
+    }
+
+    public void removeNotActiveTokens()
+    {
+        List<Integer> keep = new ArrayList<>();
+        int size = tokQueue.size();
+
+        for (int i = 0; i < size; i++) {
+            Integer temp = tokQueue.poll();
+            if(table.playerContainsToken(temp, id))
+                keep.add(temp);    
+        }
+
+        for (int i = 0; i < keep.size(); i++) {
+            tokQueue.add(keep.get(i));
+        }
+
     }
 
     /**
@@ -142,7 +154,6 @@ public class Player implements Runnable {
         // TODO implement
         if(!freeze)
         {
-            
             if(tokQueue.contains(slot) & table.isCard(slot))
             {
                 table.removeToken(id, slot);

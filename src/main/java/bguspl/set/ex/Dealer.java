@@ -228,7 +228,7 @@ public class Dealer implements Runnable {
         }
         else if (check[env.config.secondTupleElm] != env.config.notSetToCheck)
         {
-            players[check[env.config.secondTupleElm]].removeAllTokens();
+            players[check[env.config.secondTupleElm]].removeNotActiveTokens();
         }
 
     }
