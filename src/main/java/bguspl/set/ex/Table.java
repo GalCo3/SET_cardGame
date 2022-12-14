@@ -166,14 +166,6 @@ public class Table {
         slotToCard[slot] = env.config.emptySlot;
     }
 
-    private boolean cardOnTable(int card)
-    {
-        for (int i = 0; i < slotToCard.length; i++) {
-            if(slotToCard[i] == card)
-                return true;
-        }
-        return false;
-    }
 
     /**
      * Places a player token on a grid slot.
@@ -231,10 +223,6 @@ public class Table {
             {
                 ////// good
 
-                ///remove tokens
-                // for (int i = 0; i < env.config.tokenToSet; i++) {
-                //     removeToken(playerId, cardToSlot[pQueues[playerId].poll()]);
-                // }
                 /// remove cards
                 for (int i = 0; i < playersCards.length; i++) {
                     removeCard(cardToSlot[playersCards[i]]);
@@ -266,8 +254,6 @@ public class Table {
         for (int i = 0; i < slotToCard.length & counter<env.config.tokenToSet; i++) {
             if(slotToCard[i]==env.config.emptySlot)
             {
-                //cardToSlot[i] = cards[counter];
-                // slotToCard[i] = cards[counter];
                 placeCard(cards[counter],i);
                 counter++;
             }

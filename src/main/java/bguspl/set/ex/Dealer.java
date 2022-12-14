@@ -45,7 +45,6 @@ public class Dealer implements Runnable {
      */
     private volatile boolean terminate;
 
-    private int count;
     private boolean wasSet;
 
     /**
@@ -60,7 +59,6 @@ public class Dealer implements Runnable {
         this.table = table;
         this.players = players;
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
-        count=0;
         wasSet=false;
         // reshuffleTime = env.config.turnTimeoutMillis;
     }
@@ -80,11 +78,11 @@ public class Dealer implements Runnable {
         }
 
         while (!shouldFinish()) {
-            freezeAllPlayers();
             placeCardsOnTable();
             unfreezeAllPlayers();
             timerLoop();
             updateTimerDisplay(true);
+            freezeAllPlayers();
             removeCardsFromTable();
         }
         announceWinners();
@@ -99,22 +97,24 @@ public class Dealer implements Runnable {
         while (!terminate && System.currentTimeMillis() < reshuffleTime) {
             sleepUntilWokenOrTimeout();
             updateTimerDisplay(false);
-            // removeCardsFromTable();
-            // placeCardsOnEmptySlots();
         }
     }
 
     private void freezeAllPlayers()
     {
+        synchronized(table.lock){
         for (int i = 0; i < players.length; i++) {
             players[i].freeze();
+        }
         }
     }
 
     private void unfreezeAllPlayers()
     {
+        synchronized(table.lock){
         for (int i = 0; i < players.length; i++) {
             players[i].unfreeze();
+        }
         }
     }
     /**
@@ -138,13 +138,13 @@ public class Dealer implements Runnable {
      */
     private void removeCardsFromTable() {
         // TODO implement
-        // synchronized(table.lock)
-        // {
+        synchronized(table.lock)
+        {
             List<Integer> tableDeck = table.removeCards();
             for (int i = 0; i < tableDeck.size(); i++) {
                 deck.add(tableDeck.get(i));
             }
-        // }
+        }
     }
 
 
@@ -154,8 +154,8 @@ public class Dealer implements Runnable {
     private void placeCardsOnTable() {
         // TODO implement
 
-        // synchronized(table.lock){
-        // Collections.shuffle(deck);
+        synchronized(table.lock){
+        Collections.shuffle(deck);
             List<Integer> temp = new ArrayList<Integer>();
             for (int i = 0; i < env.config.tableSize & i<deck.size(); i++) {
                 table.placeCard(deck.get(i), i);
@@ -166,7 +166,7 @@ public class Dealer implements Runnable {
             {
                 deck.remove(temp.get(i));
             }
-        // }
+        }
 
 
     }
@@ -181,7 +181,7 @@ public class Dealer implements Runnable {
     private void sleepUntilWokenOrTimeout() {
 
         try {
-            Thread.sleep(100);
+            Thread.sleep(env.config.dealerTurnSleep);
         } catch (InterruptedException ignored) {}
 
         int [] check=table.checkSet();
@@ -193,7 +193,6 @@ public class Dealer implements Runnable {
             {
                 wasSet = true;
                 players[check[env.config.secondTupleElm]].setFlag(env.config.goodSet);
-                // players[check[env.config.secondTupleElm]].locObject.notifyAll();
                 if(deck.size()>=env.config.tokenToSet)
                 {
                     int [] cards =new int[env.config.tokenToSet] ;
@@ -240,12 +239,12 @@ public class Dealer implements Runnable {
         // TODO implement
         if(reset|| wasSet)
         {
-            reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis + env.config.halfSec +200;
+            reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis + env.config.delay;
             env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), false);
         }
         else 
         {
-            Boolean tenSec = reshuffleTime - System.currentTimeMillis() <=10000; 
+            Boolean tenSec = reshuffleTime - System.currentTimeMillis() <=env.config.tenSec; 
             env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), tenSec);
             wasSet = false;
         }        
@@ -263,6 +262,7 @@ public class Dealer implements Runnable {
      */
     private void announceWinners() {
         // TODO implement
+        env.ui.setCountdown(env.config.resetFreeze, false);
         int maxId  = players[0].id;
         Boolean tie = false;
 
@@ -279,14 +279,14 @@ public class Dealer implements Runnable {
         int [] out;
         if(tie)
             {
-                out= new int[2];
-                out[0] = maxId;
-                out[1] = maxId;
+                out= new int[env.config.tie];
+                out[env.config.firstTupleElm] = maxId;
+                out[env.config.firstTupleElm] = maxId;
             }
         else
             {
-                out = new int[1];
-                out[0] = maxId;
+                out = new int[env.config.winner];
+                out[env.config.firstTupleElm] = maxId;
             }
         env.ui.announceWinner(out);
     }

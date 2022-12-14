@@ -4,10 +4,13 @@ import java.security.spec.EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 
 import javax.swing.UIDefaults.ProxyLazyValue;
+
+import org.w3c.dom.events.Event;
 
 import bguspl.set.Env;
 
@@ -62,7 +65,7 @@ public class Player implements Runnable {
     private Queue<Integer> tokQueue;
 
     private int flag;
-    private boolean freeze;
+    private volatile boolean freeze;
     public Object locObject;
 
     /**
@@ -81,7 +84,7 @@ public class Player implements Runnable {
         this.human = human;
 
         tokQueue=  new ConcurrentLinkedQueue<Integer>();
-        freeze = false;
+        freeze = true;
         locObject = new Object();
     }
 
@@ -96,7 +99,8 @@ public class Player implements Runnable {
 
         while (!terminate) {
             // TODO implement main player loop
-            pointOrPenalty();            
+            pointOrPenalty();
+
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
@@ -127,10 +131,12 @@ public class Player implements Runnable {
         // note: this is a very very smart AI (!)
         aiThread = new Thread(() -> {
             env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " starting.");
+            Random rnd = new Random();
             while (!terminate) {
                 // TODO implement player key press simulator
+                keyPressed(rnd.nextInt(env.config.tableSize));
                 try {
-                    synchronized (this) { wait(); }
+                    synchronized (this) { wait(100); }
                 } catch (InterruptedException ignored) {}
             }
             env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
@@ -152,6 +158,7 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         // TODO implement
+        synchronized(table.lock){
         if(!freeze)
         {
             if(tokQueue.contains(slot) & table.isCard(slot))
@@ -164,6 +171,7 @@ public class Player implements Runnable {
                 table.placeToken(id, slot);
                 tokQueue.add(slot);
             }
+        }
             
         }
     }

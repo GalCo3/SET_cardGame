@@ -138,8 +138,12 @@ public class Config {
     public final int resetFreeze;
     public final int penaltyCount;
     public final int oneSec;
-    public final int halfSec;
+    public final int delay;
     public final int neutralFlag;
+    public final int tie;
+    public final int winner;
+    public final int tenSec;
+    public final int dealerTurnSleep;
     
 
     /**
@@ -241,10 +245,14 @@ public class Config {
         resetFreeze= Integer.parseInt(properties.getProperty("ResetFreeze", "-1"));
         penaltyCount = Integer.parseInt(properties.getProperty("PenaltyCount", "3"));
         oneSec =  Integer.parseInt(properties.getProperty("OneSec", "1000"));
-        halfSec = Integer.parseInt(properties.getProperty("HalfSec", "500"));
+        delay = Integer.parseInt(properties.getProperty("Delay", "700"));
 
         neutralFlag = Integer.parseInt(properties.getProperty("NeutralFlag", "0"));
-
+        tie = Integer.parseInt(properties.getProperty("Tie", "2"));
+        winner = Integer.parseInt(properties.getProperty("Winner", "1"));
+        tenSec = Integer.parseInt(properties.getProperty("TenSec", "10000"));
+        dealerTurnSleep = Integer.parseInt(properties.getProperty("DealerTurnSleep", "100"));
+        
         /////////////////////////////////////////////////////////////////////////////////////////
 
         // keyboard input data
