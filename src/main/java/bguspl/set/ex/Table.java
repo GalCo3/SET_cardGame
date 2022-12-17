@@ -70,7 +70,7 @@ public class Table {
     public static final int resetFreeze = -1;
     public static final int penaltyCount = 3;
     public static final int oneSec = 1000;
-    public static final int delay = 700;
+    public static final int delay = 300;
     public static final int tenSec = 10000;
     public static final int dealerTurnSleep = 100;
 
@@ -92,7 +92,8 @@ public class Table {
         this.env = env;
         this.slotToCard = slotToCard;
         this.cardToSlot = cardToSlot;
-        pQueues = new Queue[env.config.players];
+        pQueues = new ConcurrentLinkedQueue[env.config.players];
+        // pQueues = new Queue[env.config.players];
         for (int i = 0; i < env.config.players; i++) {
             pQueues[i] = new ConcurrentLinkedQueue<Integer>();
         }
@@ -183,6 +184,7 @@ public class Table {
      * @param slot - the slot from which to remove the card.
      */
     public void removeCard(int slot) {
+        
         try {
             Thread.sleep(env.config.tableDelayMillis);
         } catch (InterruptedException ignored) {}
@@ -208,14 +210,18 @@ public class Table {
      * @param slot   - the slot on which to place the token.
      */
     public void placeToken(int player, int slot) {
+        
         if(pQueues[player].size()<Table.tokenToSet)
         {
             pQueues[player].add(slotToCard[slot]);
             env.ui.placeToken(player, slot);
-
-            if(pQueues[player].size()==3)
-                pIdqQueue.add(player);
+            
+            // if(pQueues[player].size()==3)
+            //     {
+            //         pIdqQueue.add(player);
+            //     }
         }
+        
     }
 
     /**
@@ -293,6 +299,10 @@ public class Table {
                 counter++;
             }
         }
+    }
+
+    public void pushPid(int id){
+        pIdqQueue.add(id);
     }
 
     public List<Integer> removeCards ()

@@ -129,7 +129,13 @@ public class Player implements Runnable {
         for (int i = 0; i < keep.size(); i++) {
             tokQueue.add(keep.get(i));
         }
-
+        synchronized(locObject){
+            
+                needToFreeze=false;
+                freeze = false;
+                locObject.notifyAll();
+            
+        }
     }
 
     /**
@@ -144,15 +150,18 @@ public class Player implements Runnable {
             while (!terminate) {
                 // TODO implement player key press simulator
 
-                keyPressed(rnd.nextInt(env.config.tableSize));
-                
-                
-                try {synchronized (this) 
-                    {
-                        wait(100);
-                    }
-                } catch (InterruptedException ignored) {}
-            
+                synchronized(locObject){
+                    keyPressed(rnd.nextInt(3));//env.config.tableSize
+                }
+                    
+                    if(needToFreeze){
+                        try {
+                            {
+                                synchronized(locObject){
+                                locObject.wait();}
+                            }
+                        } catch (InterruptedException ignored) {}}
+                        
             }
             env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
@@ -165,6 +174,10 @@ public class Player implements Runnable {
     public void terminate() {
         // TODO implement
         terminate = true;
+        synchronized(locObject)
+        {
+            locObject.notifyAll();
+        }
     }
 
     /**
@@ -184,12 +197,19 @@ public class Player implements Runnable {
                 table.removeToken(id, slot);
                 tokQueue.remove(slot);
             }
-            else if(table.isCard(slot))
+            else if(table.isCard(slot) && tokQueue.size()<Table.tokenToSet)
             {
                 tokQueue.add(slot);
+
+                if(tokQueue.size()==Table.tokenToSet)
+                    {
+                        freeze= true;
+                        needToFreeze = true;
+                        table.pushPid(id);
+                    }
+
                 table.placeToken(id, slot);
-                if(tokQueue.size()==3)
-                    freeze = true;  
+                
             }
             
         }
@@ -204,7 +224,7 @@ public class Player implements Runnable {
 
     public void pointOrPenalty ()
     {
-        synchronized(locObject){
+        
         if(flag == Table.goodSet)
             {
                 point();
@@ -217,7 +237,7 @@ public class Player implements Runnable {
                 flag = Table.neutralFlag;
                 
             }
-        }
+        
         
     }
 
@@ -229,9 +249,7 @@ public class Player implements Runnable {
      */
     public void point() { /////need sync
         // TODO implement
-        
         synchronized(locObject){
-
             tokQueue.clear();
             int ignored = table.countCards(); // this part is just for demonstration in the unit tests
             env.ui.setScore(id, ++score);
@@ -242,8 +260,11 @@ public class Player implements Runnable {
             } catch (InterruptedException ign) {}
             freeze = false;
             env.ui.setFreeze(id, Table.resetFreeze);
-            
+
+            needToFreeze = false;
+            locObject.notifyAll();
         }
+        
             
     }
 
@@ -254,7 +275,7 @@ public class Player implements Runnable {
         // TODO implement
         synchronized(locObject){
         int count = 0 ;
-        // freeze = true;
+        
         while(count<Table.penaltyCount)
         {
             env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * Table.oneSec);
@@ -266,7 +287,11 @@ public class Player implements Runnable {
         } 
         freeze = false; 
         env.ui.setFreeze(id, Table.resetFreeze);
-    }
+        // needToFreeze = false;
+        // // if(!table.isInShuflle)
+        // locObject.notifyAll();
+        removeNotActiveTokens();
+        }
         
     }
 
@@ -282,12 +307,21 @@ public class Player implements Runnable {
     
     public void freeze()
     {
+        // synchronized(locObject){
+        needToFreeze = true;
         freeze = true;
+        // }
     }
 
     public void unfreeze()
     {
-        freeze = false;
+        synchronized(locObject)
+        {
+            needToFreeze = false;
+            freeze = false;
+            tokQueue.clear();
+            locObject.notifyAll();
+        }
     }
     
 }

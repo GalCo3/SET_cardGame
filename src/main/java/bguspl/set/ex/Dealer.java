@@ -278,35 +278,30 @@ public class Dealer implements Runnable {
     private void announceWinners() {
         // TODO implement
         env.ui.setCountdown(Table.resetFreeze, false);
-        int maxId  = players[0].id;
-        Boolean tie = false;
+        int max = players[0].getScore();
+        Queue<Integer> winners = new ConcurrentLinkedQueue<>();
 
         for (int i = 0; i < players.length; i++) {
             players[i].terminate();
         }
         terminate();
+
         for (int i = 1; i < players.length; i++) {
-            if(players[i].getScore() > players[i-1].getScore())
-                maxId = i;
-            else if(players[i].getScore() == players[i-1].getScore())
-                {
-                    tie = true;
-                    maxId = i;
-                }
+            if(players[i].getScore() > max)
+                max = players[i].getScore();
         }
 
-        int [] out;
-        if(tie)
-            {
-                out= new int[Table.tie];
-                out[Table.firstTupleElm] = maxId;
-                out[Table.firstTupleElm] = maxId;
-            }
-        else
-            {
-                out = new int[Table.winner];
-                out[Table.firstTupleElm] = maxId;
-            }
+        for (int i = 0; i < players.length; i++) {
+            if(players[i].getScore() == max)
+                winners.add(i);
+        }
+
+        int [] out = new int[winners.size()];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = winners.poll();
+        }
+
+
         env.ui.announceWinner(out);
     }
 }
