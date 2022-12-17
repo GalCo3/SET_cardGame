@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 
 import javax.swing.UIDefaults.ProxyLazyValue;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * This class contains the data that is visible to the player.
@@ -45,6 +46,39 @@ public class Table {
     private Queue<Integer>pIdqQueue; // Queue of players who reached 3 tokens
 
     public Object lock ; 
+
+    public volatile Boolean isInShuflle;
+
+
+    //////////////////////////////
+    //#MAGIC_NUMBERS
+
+    public static final int tokenToSet = 3;
+    public static final int emptySlot = -1;
+    public static final int badSet = -1;
+    public static final int notSetToCheck = -3;
+    public static final int goodSet = 1;
+
+    public static final int firstCard = 0;
+    public static final int secondCard = 1;
+    public static final int thirdCard = 2;
+
+    public static final int tupleSize = 2;
+    public static final int firstTupleElm = 0;
+    public static final int secondTupleElm = 1;
+
+    public static final int resetFreeze = -1;
+    public static final int penaltyCount = 3;
+    public static final int oneSec = 1000;
+    public static final int delay = 700;
+    public static final int tenSec = 10000;
+    public static final int dealerTurnSleep = 100;
+
+    public static final int neutralFlag = 0;
+    public static final int tie = 2;
+    public static final int winner =1;
+    
+    //////////////////////////////
     
     /**
      * Constructor for testing.
@@ -63,7 +97,8 @@ public class Table {
             pQueues[i] = new ConcurrentLinkedQueue<Integer>();
         }
         pIdqQueue = new ConcurrentLinkedQueue<Integer>();
-        lock = new Object();   
+        lock = new Object();  
+        isInShuflle = true; 
     }
 
     /**
@@ -104,13 +139,13 @@ public class Table {
 
     public boolean isCard(int slot)
     {
-        return slotToCard[slot] != env.config.emptySlot;
+        return slotToCard[slot] != Table.emptySlot;
     }
 
     public boolean empty_Table()
     {
         for (int i = 0; i < slotToCard.length; i++) {
-            if(slotToCard[i] != env.config.emptySlot)
+            if(slotToCard[i] != Table.emptySlot)
                 return false;
         }
         return true;
@@ -163,7 +198,7 @@ public class Table {
                 env.ui.removeToken(i, slot);
             }
         }
-        slotToCard[slot] = env.config.emptySlot;
+        slotToCard[slot] = Table.emptySlot;
     }
 
 
@@ -173,7 +208,7 @@ public class Table {
      * @param slot   - the slot on which to place the token.
      */
     public void placeToken(int player, int slot) {
-        if(pQueues[player].size()<env.config.tokenToSet)
+        if(pQueues[player].size()<Table.tokenToSet)
         {
             pQueues[player].add(slotToCard[slot]);
             env.ui.placeToken(player, slot);
@@ -197,19 +232,19 @@ public class Table {
 
     public int[] checkSet()
     {
-        int [] out = new int[env.config.tupleSize];
+        int [] out = new int[Table.tupleSize];
         if(!pIdqQueue.isEmpty())
         {
             
             int playerId = pIdqQueue.poll();
-            if(pQueues[playerId].size() < env.config.tokenToSet)
+            if(pQueues[playerId].size() < Table.tokenToSet)
             {
-                out[env.config.firstTupleElm] =env.config.notSetToCheck;
-                out[env.config.secondTupleElm] =playerId;
+                out[Table.firstTupleElm] =Table.notSetToCheck;
+                out[Table.secondTupleElm] =playerId;
                 return out;
             }
 
-            int [] playersCards = new int [env.config.tokenToSet]; 
+            int [] playersCards = new int [Table.tokenToSet]; 
 
             
             for (int i = 0; i < playersCards.length; i++) {
@@ -229,30 +264,30 @@ public class Table {
                 }
                 pQueues[playerId].clear();
                 ///score player
-                out[env.config.firstTupleElm] = env.config.goodSet;
-                out[env.config.secondTupleElm] = playerId;
+                out[Table.firstTupleElm] = Table.goodSet;
+                out[Table.secondTupleElm] = playerId;
                 return out;
                 
             }
             else
             {
-                out[env.config.firstTupleElm] = env.config.badSet;
-                out[env.config.secondTupleElm] = playerId;
+                out[Table.firstTupleElm] = Table.badSet;
+                out[Table.secondTupleElm] = playerId;
                 return out; 
             }
             
             
         }
-        out[env.config.firstTupleElm] =env.config.notSetToCheck;
-        out[env.config.secondTupleElm] =env.config.notSetToCheck;
+        out[Table.firstTupleElm] =Table.notSetToCheck;
+        out[Table.secondTupleElm] =Table.notSetToCheck;
         return out;
     }
 
     public void place_3_cards(int [] cards)
     {
         int counter =0 ;
-        for (int i = 0; i < slotToCard.length & counter<env.config.tokenToSet; i++) {
-            if(slotToCard[i]==env.config.emptySlot)
+        for (int i = 0; i < slotToCard.length & counter<Table.tokenToSet; i++) {
+            if(slotToCard[i]==Table.emptySlot)
             {
                 placeCard(cards[counter],i);
                 counter++;
@@ -266,7 +301,7 @@ public class Table {
 
         List<Integer> out = new ArrayList<>();
         for (int i = 0; i < slotToCard.length; i++) {
-            if(slotToCard[i]!=env.config.emptySlot)
+            if(slotToCard[i]!=Table.emptySlot)
                 {
                     out.add(slotToCard[i]);
                     removeCard(i);

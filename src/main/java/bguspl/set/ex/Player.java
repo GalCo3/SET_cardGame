@@ -1,5 +1,7 @@
 package bguspl.set.ex;
 
+import java.io.Console;
+import java.nio.file.ClosedWatchServiceException;
 import java.security.spec.EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,8 +67,15 @@ public class Player implements Runnable {
     private Queue<Integer> tokQueue;
 
     private int flag;
-    private volatile boolean freeze;
+    
     public Object locObject;
+
+    private volatile boolean freeze;
+
+    private volatile boolean needToFreeze;
+    
+
+    
 
     /**
      * The class constructor.
@@ -85,6 +94,7 @@ public class Player implements Runnable {
 
         tokQueue=  new ConcurrentLinkedQueue<Integer>();
         freeze = true;
+        needToFreeze = false;
         locObject = new Object();
     }
 
@@ -96,7 +106,6 @@ public class Player implements Runnable {
         playerThread = Thread.currentThread();
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + "starting.");
         if (!human) createArtificialIntelligence();
-
         while (!terminate) {
             // TODO implement main player loop
             pointOrPenalty();
@@ -134,10 +143,16 @@ public class Player implements Runnable {
             Random rnd = new Random();
             while (!terminate) {
                 // TODO implement player key press simulator
+
                 keyPressed(rnd.nextInt(env.config.tableSize));
-                try {
-                    synchronized (this) { wait(100); }
+                
+                
+                try {synchronized (this) 
+                    {
+                        wait(100);
+                    }
                 } catch (InterruptedException ignored) {}
+            
             }
             env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
@@ -149,6 +164,7 @@ public class Player implements Runnable {
      */
     public void terminate() {
         // TODO implement
+        terminate = true;
     }
 
     /**
@@ -158,9 +174,11 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         // TODO implement
-        synchronized(table.lock){
-        if(!freeze)
+        
+        
+        if(!table.isInShuflle & !freeze)
         {
+            
             if(tokQueue.contains(slot) & table.isCard(slot))
             {
                 table.removeToken(id, slot);
@@ -168,12 +186,15 @@ public class Player implements Runnable {
             }
             else if(table.isCard(slot))
             {
-                table.placeToken(id, slot);
                 tokQueue.add(slot);
+                table.placeToken(id, slot);
+                if(tokQueue.size()==3)
+                    freeze = true;  
             }
-        }
             
         }
+        
+            
     }
 
     public void setFlag(int num)
@@ -183,16 +204,21 @@ public class Player implements Runnable {
 
     public void pointOrPenalty ()
     {
-        if(flag == env.config.goodSet)
+        synchronized(locObject){
+        if(flag == Table.goodSet)
             {
                 point();
-                flag = env.config.neutralFlag;
+                flag = Table.neutralFlag;
+                
             }
-        else if(flag == env.config.badSet)
+        else if(flag == Table.badSet)
             {
                 penalty();
-                flag = env.config.neutralFlag;
-            }                
+                flag = Table.neutralFlag;
+                
+            }
+        }
+        
     }
 
     /**
@@ -203,16 +229,22 @@ public class Player implements Runnable {
      */
     public void point() { /////need sync
         // TODO implement
-        tokQueue.clear();
-        int ignored = table.countCards(); // this part is just for demonstration in the unit tests
-        env.ui.setScore(id, ++score);
-        env.ui.setFreeze(id, env.config.pointFreezeMillis);
-        freeze = true;
-        try {
-            this.playerThread.sleep(env.config.pointFreezeMillis);
-        } catch (InterruptedException ign) {}
-        freeze = false;
-        env.ui.setFreeze(id, env.config.resetFreeze);
+        
+        synchronized(locObject){
+
+            tokQueue.clear();
+            int ignored = table.countCards(); // this part is just for demonstration in the unit tests
+            env.ui.setScore(id, ++score);
+            env.ui.setFreeze(id, env.config.pointFreezeMillis);
+            // freeze = true;
+            try {
+                Thread.sleep(env.config.pointFreezeMillis);
+            } catch (InterruptedException ign) {}
+            freeze = false;
+            env.ui.setFreeze(id, Table.resetFreeze);
+            
+        }
+            
     }
 
     /**
@@ -220,19 +252,22 @@ public class Player implements Runnable {
      */
     public void penalty() { ///need sync
         // TODO implement
+        synchronized(locObject){
         int count = 0 ;
-        freeze = true;
-        while(count<env.config.penaltyCount)
+        // freeze = true;
+        while(count<Table.penaltyCount)
         {
-            env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * env.config.oneSec);
+            env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * Table.oneSec);
             
             try {
-                this.playerThread.sleep(env.config.pointFreezeMillis);
+                Thread.sleep(Table.oneSec);
             } catch (InterruptedException ignored) {}
             count++;
         } 
         freeze = false; 
-        env.ui.setFreeze(id, env.config.resetFreeze);
+        env.ui.setFreeze(id, Table.resetFreeze);
+    }
+        
     }
 
     public int getScore() {
@@ -244,6 +279,7 @@ public class Player implements Runnable {
         tokQueue.clear();
     }
 
+    
     public void freeze()
     {
         freeze = true;
@@ -253,4 +289,5 @@ public class Player implements Runnable {
     {
         freeze = false;
     }
+    
 }

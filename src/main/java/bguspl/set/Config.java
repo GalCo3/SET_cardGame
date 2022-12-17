@@ -123,27 +123,6 @@ public class Config {
      */
     public final int fontSize;
 
-    public final int tokenToSet;
-    public final int emptySlot;
-    public final int badSet;
-    public final int notSetToCheck;
-    public final int goodSet;
-
-    public final int firstCard;
-    public final int secondCard;
-    public final int thirdCard;
-    public final int tupleSize;
-    public final int firstTupleElm;
-    public final int secondTupleElm;
-    public final int resetFreeze;
-    public final int penaltyCount;
-    public final int oneSec;
-    public final int delay;
-    public final int neutralFlag;
-    public final int tie;
-    public final int winner;
-    public final int tenSec;
-    public final int dealerTurnSleep;
     
 
     /**
@@ -226,34 +205,6 @@ public class Config {
         fontSize = Integer.parseInt(properties.getProperty("FontSize", "40"));
         
 
-        /////////////////////////////////////////////////////////////////////////////////////////
-        tokenToSet = Integer.parseInt(properties.getProperty("TokenToSet", "3"));
-        emptySlot = Integer.parseInt(properties.getProperty("EmptySlot", "-1"));
-
-        badSet = Integer.parseInt(properties.getProperty("BadSet", "-1"));
-        notSetToCheck=Integer.parseInt(properties.getProperty("NotSetToCheck", "-3"));
-        goodSet=Integer.parseInt(properties.getProperty("GoodSet", "1"));
-
-        firstCard=Integer.parseInt(properties.getProperty("FirstCard", "0"));
-        secondCard=Integer.parseInt(properties.getProperty("SecondCard", "1"));
-        thirdCard=Integer.parseInt(properties.getProperty("ThirdCard", "2"));
-
-        tupleSize = Integer.parseInt(properties.getProperty("TupleSize", "2"));
-        firstTupleElm = Integer.parseInt(properties.getProperty("FirstTupleElm", "0"));
-        secondTupleElm = Integer.parseInt(properties.getProperty("SecondTupleElm", "1"));
-
-        resetFreeze= Integer.parseInt(properties.getProperty("ResetFreeze", "-1"));
-        penaltyCount = Integer.parseInt(properties.getProperty("PenaltyCount", "3"));
-        oneSec =  Integer.parseInt(properties.getProperty("OneSec", "1000"));
-        delay = Integer.parseInt(properties.getProperty("Delay", "700"));
-
-        neutralFlag = Integer.parseInt(properties.getProperty("NeutralFlag", "0"));
-        tie = Integer.parseInt(properties.getProperty("Tie", "2"));
-        winner = Integer.parseInt(properties.getProperty("Winner", "1"));
-        tenSec = Integer.parseInt(properties.getProperty("TenSec", "10000"));
-        dealerTurnSleep = Integer.parseInt(properties.getProperty("DealerTurnSleep", "100"));
-        
-        /////////////////////////////////////////////////////////////////////////////////////////
 
         // keyboard input data
         playerKeys = new int[players][rows * columns];

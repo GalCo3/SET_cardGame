@@ -52,6 +52,8 @@ public class Dealer implements Runnable {
      */
     private long reshuffleTime = Long.MAX_VALUE;
 
+    private Thread currentThread;
+
 
 
     public Dealer(Env env, Table table, Player[] players) {
@@ -69,7 +71,7 @@ public class Dealer implements Runnable {
     @Override
     public void run() {
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " starting.");
-
+        currentThread = Thread.currentThread();
         Thread [] p  =  new Thread[env.config.players];
 
         for (int i = 0; i < p.length; i++) {
@@ -89,6 +91,25 @@ public class Dealer implements Runnable {
         env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
     }
 
+
+    private void freezeAllPlayers()
+    {
+        synchronized(table.lock){
+        for (int i = 0; i < players.length; i++) {
+            players[i].freeze();
+        }
+        }
+    }
+
+
+    private void unfreezeAllPlayers()
+    {
+        synchronized(table.lock){
+        for (int i = 0; i < players.length; i++) {
+            players[i].unfreeze();
+        }
+        }
+    }
     /**
      * The inner loop of the dealer thread that runs as long as the countdown did not time out.
      */
@@ -100,28 +121,19 @@ public class Dealer implements Runnable {
         }
     }
 
-    private void freezeAllPlayers()
-    {
-        synchronized(table.lock){
-        for (int i = 0; i < players.length; i++) {
-            players[i].freeze();
-        }
-        }
-    }
+    
 
-    private void unfreezeAllPlayers()
-    {
-        synchronized(table.lock){
-        for (int i = 0; i < players.length; i++) {
-            players[i].unfreeze();
-        }
-        }
-    }
+    
     /**
      * Called when the game should be terminated due to an external event.
      */
     public void terminate() {
         // TODO implement
+        for (int i = 0; i < players.length; i++) {
+            players[i].terminate();
+        }
+        terminate = true;
+        // currentThread.interrupt();
     }
 
     /**
@@ -140,6 +152,7 @@ public class Dealer implements Runnable {
         // TODO implement
         synchronized(table.lock)
         {
+            table.isInShuflle = true;
             List<Integer> tableDeck = table.removeCards();
             for (int i = 0; i < tableDeck.size(); i++) {
                 deck.add(tableDeck.get(i));
@@ -155,7 +168,7 @@ public class Dealer implements Runnable {
         // TODO implement
 
         synchronized(table.lock){
-        Collections.shuffle(deck);
+        // Collections.shuffle(deck);
             List<Integer> temp = new ArrayList<Integer>();
             for (int i = 0; i < env.config.tableSize & i<deck.size(); i++) {
                 table.placeCard(deck.get(i), i);
@@ -166,6 +179,7 @@ public class Dealer implements Runnable {
             {
                 deck.remove(temp.get(i));
             }
+            table.isInShuflle = false;
         }
 
 
@@ -181,30 +195,31 @@ public class Dealer implements Runnable {
     private void sleepUntilWokenOrTimeout() {
 
         try {
-            Thread.sleep(env.config.dealerTurnSleep);
+            Thread.sleep(Table.dealerTurnSleep);
         } catch (InterruptedException ignored) {}
 
         int [] check=table.checkSet();
         wasSet = false;
 
-        if(check[env.config.firstTupleElm] != env.config.notSetToCheck)
+        if(check[Table.firstTupleElm] != Table.notSetToCheck)
         {
-            if(check[env.config.firstTupleElm]==env.config.goodSet)
+            if(check[Table.firstTupleElm]==Table.goodSet)
             {
                 wasSet = true;
-                players[check[env.config.secondTupleElm]].setFlag(env.config.goodSet);
-                if(deck.size()>=env.config.tokenToSet)
+                players[check[Table.secondTupleElm]].setFlag(Table.goodSet);
+                
+                if(deck.size()>=Table.tokenToSet)
                 {
-                    int [] cards =new int[env.config.tokenToSet] ;
+                    int [] cards =new int[Table.tokenToSet] ;
 
-                    cards[env.config.firstCard] = deck.get(env.config.firstCard);
-                    deck.remove(env.config.firstCard);
+                    cards[Table.firstCard] = deck.get(Table.firstCard);
+                    deck.remove(Table.firstCard);
 
-                    cards[env.config.secondCard] = deck.get(env.config.firstCard);
-                    deck.remove(env.config.firstCard);
+                    cards[Table.secondCard] = deck.get(Table.firstCard);
+                    deck.remove(Table.firstCard);
 
-                    cards[env.config.thirdCard] = deck.get(env.config.firstCard);
-                    deck.remove(env.config.firstCard);
+                    cards[Table.thirdCard] = deck.get(Table.firstCard);
+                    deck.remove(Table.firstCard);
 
 
                     table.place_3_cards(cards);
@@ -221,13 +236,13 @@ public class Dealer implements Runnable {
             else
             {
                 ////// BAD SET
-                players[check[env.config.secondTupleElm]].setFlag(env.config.badSet);
+                players[check[Table.secondTupleElm]].setFlag(Table.badSet);
                 wasSet = false;
             }
         }
-        else if (check[env.config.secondTupleElm] != env.config.notSetToCheck)
+        else if (check[Table.secondTupleElm] != Table.notSetToCheck)
         {
-            players[check[env.config.secondTupleElm]].removeNotActiveTokens();
+            players[check[Table.secondTupleElm]].removeNotActiveTokens();
         }
 
     }
@@ -239,12 +254,12 @@ public class Dealer implements Runnable {
         // TODO implement
         if(reset|| wasSet)
         {
-            reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis + env.config.delay;
+            reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis ;//+ env.config.delay;
             env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), false);
         }
         else 
         {
-            Boolean tenSec = reshuffleTime - System.currentTimeMillis() <=env.config.tenSec; 
+            Boolean tenSec = reshuffleTime - System.currentTimeMillis() <=Table.tenSec; 
             env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), tenSec);
             wasSet = false;
         }        
@@ -262,10 +277,14 @@ public class Dealer implements Runnable {
      */
     private void announceWinners() {
         // TODO implement
-        env.ui.setCountdown(env.config.resetFreeze, false);
+        env.ui.setCountdown(Table.resetFreeze, false);
         int maxId  = players[0].id;
         Boolean tie = false;
 
+        for (int i = 0; i < players.length; i++) {
+            players[i].terminate();
+        }
+        terminate();
         for (int i = 1; i < players.length; i++) {
             if(players[i].getScore() > players[i-1].getScore())
                 maxId = i;
@@ -279,14 +298,14 @@ public class Dealer implements Runnable {
         int [] out;
         if(tie)
             {
-                out= new int[env.config.tie];
-                out[env.config.firstTupleElm] = maxId;
-                out[env.config.firstTupleElm] = maxId;
+                out= new int[Table.tie];
+                out[Table.firstTupleElm] = maxId;
+                out[Table.firstTupleElm] = maxId;
             }
         else
             {
-                out = new int[env.config.winner];
-                out[env.config.firstTupleElm] = maxId;
+                out = new int[Table.winner];
+                out[Table.firstTupleElm] = maxId;
             }
         env.ui.announceWinner(out);
     }
