@@ -52,7 +52,7 @@ public class Dealer implements Runnable {
      */
     private long reshuffleTime = Long.MAX_VALUE;
 
-    private Thread currentThread;
+    
 
 
 
@@ -62,7 +62,6 @@ public class Dealer implements Runnable {
         this.players = players;
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
         wasSet=false;
-        // reshuffleTime = env.config.turnTimeoutMillis;
     }
 
     /**
@@ -70,8 +69,8 @@ public class Dealer implements Runnable {
      */
     @Override
     public void run() {
-        env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " starting.");
-        currentThread = Thread.currentThread();
+        env.logger.info("Thread " + Thread.currentThread().getName() + " starting.");
+        
         Thread [] p  =  new Thread[env.config.players];
 
         for (int i = 0; i < p.length; i++) {
@@ -88,7 +87,7 @@ public class Dealer implements Runnable {
             removeCardsFromTable();
         }
         announceWinners();
-        env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
+        env.logger.info("Thread " + Thread.currentThread().getName() + " terminated.");
     }
 
 
@@ -133,7 +132,7 @@ public class Dealer implements Runnable {
             players[i].terminate();
         }
         terminate = true;
-        // currentThread.interrupt();
+        
     }
 
     /**
@@ -268,9 +267,9 @@ public class Dealer implements Runnable {
     // /**
     //  * Returns all the cards from the table to the deck.
     //  */
-    // private void removeAllCardsFromTable() {
-    //     // TODO implement
-    // }
+    private void removeAllCardsFromTable() {
+        // TODO implement
+    }
 
     /**
      * Check who is/are the winner/s and displays them.
@@ -278,7 +277,7 @@ public class Dealer implements Runnable {
     private void announceWinners() {
         // TODO implement
         env.ui.setCountdown(Table.resetFreeze, false);
-        int max = players[0].getScore();
+        int max = players[0].score();
         Queue<Integer> winners = new ConcurrentLinkedQueue<>();
 
         for (int i = 0; i < players.length; i++) {
@@ -287,12 +286,12 @@ public class Dealer implements Runnable {
         terminate();
 
         for (int i = 1; i < players.length; i++) {
-            if(players[i].getScore() > max)
-                max = players[i].getScore();
+            if(players[i].score() > max)
+                max = players[i].score();
         }
 
         for (int i = 0; i < players.length; i++) {
-            if(players[i].getScore() == max)
+            if(players[i].score() == max)
                 winners.add(i);
         }
 

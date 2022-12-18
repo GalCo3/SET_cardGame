@@ -104,22 +104,19 @@ public class Player implements Runnable {
     @Override
     public void run() {
         playerThread = Thread.currentThread();
-        env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + "starting.");
+        env.logger.info("Thread " + Thread.currentThread().getName() + " starting.");
         if (!human) createArtificialIntelligence();
         while (!terminate) {
             // TODO implement main player loop
-            // synchronized(this){
-            //     try {
-                    
-            //     } catch (InterruptedException e) {
-            //         // TODO: handle exception
-            //     }
-            // }
+            synchronized(this){
+                try {wait();} 
+                catch (InterruptedException ignored) {}
+            }
             pointOrPenalty();
 
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
-        env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
+        env.logger.info("Thread " + Thread.currentThread().getName() + " terminated.");
     }
 
     public void removeNotActiveTokens()
@@ -152,7 +149,7 @@ public class Player implements Runnable {
     private void createArtificialIntelligence() {
         // note: this is a very very smart AI (!)
         aiThread = new Thread(() -> {
-            env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " starting.");
+            env.logger.info("Thread " + Thread.currentThread().getName() + " starting.");
             Random rnd = new Random();
             while (!terminate) {
                 // TODO implement player key press simulator
@@ -170,7 +167,7 @@ public class Player implements Runnable {
                         } catch (InterruptedException ignored) {}}
                         
             }
-            env.logger.log(Level.INFO, "Thread " + Thread.currentThread().getName() + " terminated.");
+            env.logger.info("Thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
         aiThread.start();
     }
@@ -227,6 +224,10 @@ public class Player implements Runnable {
     public void setFlag(int num)
     {
         flag = num;
+        synchronized(this)
+        {
+            notifyAll();
+        }
     }
 
     public void pointOrPenalty ()
@@ -294,15 +295,12 @@ public class Player implements Runnable {
         } 
         freeze = false; 
         env.ui.setFreeze(id, Table.resetFreeze);
-        // needToFreeze = false;
-        // // if(!table.isInShuflle)
-        // locObject.notifyAll();
         removeNotActiveTokens();
         }
         
     }
 
-    public int getScore() {
+    public int score() {
         return score;
     }
 
