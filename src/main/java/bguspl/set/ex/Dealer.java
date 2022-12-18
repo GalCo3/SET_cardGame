@@ -132,7 +132,7 @@ public class Dealer implements Runnable {
             players[i].terminate();
         }
         terminate = true;
-        
+        // Thread.currentThread().interrupt();
     }
 
     /**
@@ -280,10 +280,12 @@ public class Dealer implements Runnable {
         int max = players[0].score();
         Queue<Integer> winners = new ConcurrentLinkedQueue<>();
 
-        for (int i = 0; i < players.length; i++) {
-            players[i].terminate();
+        
+
+        if(!terminate)
+        {
+            terminate();
         }
-        terminate();
 
         for (int i = 1; i < players.length; i++) {
             if(players[i].score() > max)

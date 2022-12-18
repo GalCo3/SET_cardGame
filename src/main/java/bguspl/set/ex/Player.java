@@ -182,6 +182,10 @@ public class Player implements Runnable {
         {
             locObject.notifyAll();
         }
+        synchronized(this)
+        {
+            notifyAll();
+        }
     }
 
     /**
