@@ -108,6 +108,13 @@ public class Player implements Runnable {
         if (!human) createArtificialIntelligence();
         while (!terminate) {
             // TODO implement main player loop
+            // synchronized(this){
+            //     try {
+                    
+            //     } catch (InterruptedException e) {
+            //         // TODO: handle exception
+            //     }
+            // }
             pointOrPenalty();
 
         }
@@ -151,7 +158,7 @@ public class Player implements Runnable {
                 // TODO implement player key press simulator
 
                 synchronized(locObject){
-                    keyPressed(rnd.nextInt(3));//env.config.tableSize
+                    keyPressed(rnd.nextInt(env.config.tableSize));//
                 }
                     
                     if(needToFreeze){
