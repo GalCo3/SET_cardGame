@@ -270,7 +270,7 @@ public class Table {
             if(env.util.testSet(playersCards))
             {
                 ////// good
-
+                isInShuflle = true;
                 /// remove cards
                 for (int i = 0; i < playersCards.length; i++) {
                     removeCard(cardToSlot[playersCards[i]]);
