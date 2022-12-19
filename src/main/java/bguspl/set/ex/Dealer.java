@@ -167,7 +167,7 @@ public class Dealer implements Runnable {
         // TODO implement
 
         synchronized(table.lock){
-        // Collections.shuffle(deck);
+        Collections.shuffle(deck);
             List<Integer> temp = new ArrayList<Integer>();
             for (int i = 0; i < env.config.tableSize & i<deck.size(); i++) {
                 table.placeCard(deck.get(i), i);
