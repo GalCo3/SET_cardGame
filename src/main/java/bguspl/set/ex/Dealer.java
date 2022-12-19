@@ -96,6 +96,7 @@ public class Dealer implements Runnable {
         synchronized(table.lock){
         for (int i = 0; i < players.length; i++) {
             players[i].freeze();
+            /////blabla
         }
         }
     }
