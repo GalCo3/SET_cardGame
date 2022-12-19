@@ -155,7 +155,7 @@ public class Player implements Runnable {
                 // TODO implement player key press simulator
 
                 synchronized(locObject){
-                    keyPressed(rnd.nextInt(env.config.tableSize));//
+                    keyPressed(rnd.nextInt(3));//
                 }
                     
                     if(needToFreeze){
