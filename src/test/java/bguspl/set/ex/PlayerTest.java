@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -69,5 +70,32 @@ class PlayerTest {
 
         // check that ui.setScore was called with the player's id and the correct score
         verify(ui).setScore(eq(player.id), eq(expectedScore));
+    }
+
+    @Test
+    
+    void penalty()
+    {
+       
+    
+        int expectedScore = player.score();
+        int expectedQueueSize = player.get_QueueSize();
+
+        player.penalty();
+        
+        assertEquals(expectedScore, player.score());
+        assertEquals(expectedQueueSize, player.get_QueueSize());
+
+    
+    }
+
+    @Test
+    void removeAllTokens()
+    {
+        int expectedQueueSize = 0;
+
+        player.removeAllTokens();
+        
+        assertEquals(player.get_QueueSize(), expectedQueueSize);
     }
 }

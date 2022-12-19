@@ -236,6 +236,13 @@ public class Table {
         return false;
     }
 
+    //#####forTests
+    public int getpQueueSize(int player)
+    {
+        return pQueues[player].size();
+    }
+    ///
+
     public int[] checkSet()
     {
         int [] out = new int[Table.tupleSize];

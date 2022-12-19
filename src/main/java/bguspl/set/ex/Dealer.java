@@ -91,7 +91,7 @@ public class Dealer implements Runnable {
     }
 
 
-    private void freezeAllPlayers()
+    public void freezeAllPlayers()
     {
         synchronized(table.lock){
         for (int i = 0; i < players.length; i++) {
@@ -163,7 +163,7 @@ public class Dealer implements Runnable {
     /**
      * Check if any cards can be removed from the deck and placed on the table.
      */
-    private void placeCardsOnTable() {
+    public void placeCardsOnTable() {
         // TODO implement
 
         synchronized(table.lock){
@@ -304,5 +304,10 @@ public class Dealer implements Runnable {
 
 
         env.ui.announceWinner(out);
+    }
+
+    public int getDeckSize()
+    {
+        return deck.size();
     }
 }

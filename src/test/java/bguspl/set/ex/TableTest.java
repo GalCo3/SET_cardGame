@@ -6,12 +6,14 @@ import bguspl.set.UserInterface;
 import bguspl.set.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestClassOrder;
 
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 class TableTest {
 
@@ -37,6 +39,7 @@ class TableTest {
 
         Env env = new Env(logger, config, new MockUserInterface(), new MockUtil());
         table = new Table(env, slotToCard, cardToSlot);
+        
     }
 
     private int fillSomeSlots() {
@@ -54,6 +57,25 @@ class TableTest {
             cardToSlot[i] = i;
         }
     }
+
+    private void clearAllSlots()
+    {
+        for (int i = 0; i < slotToCard.length; i++) {
+            slotToCard[i] = -1;
+        }
+    }
+
+    private int countEmptySlots()
+    {
+        int out = 0;
+        for (int i = 0; i < slotToCard.length; i++) {
+            if(!table.isCard(i))
+                out++;
+        }
+        return out;
+    }
+
+    
 
     private void placeSomeCardsAndAssert() throws InterruptedException {
         table.placeCard(8, 2);
@@ -93,6 +115,32 @@ class TableTest {
     void placeCard_AllSlotsAreFilled() throws InterruptedException {
         fillAllSlots();
         placeSomeCardsAndAssert();
+    }
+
+    @Test
+    void place_3_cards()
+    {
+        clearAllSlots();
+        int expectedNotEmptySlots = countEmptySlots() -3;
+        int[] cards  = {1,2,3};
+        table.place_3_cards(cards);
+        assertEquals(expectedNotEmptySlots, countEmptySlots());
+    }
+
+    @Test
+    void removeToken()
+    {
+        
+        //BEFORE
+        fillAllSlots();
+        table.placeToken(0, 0);
+        int expectedQueueSize = table.getpQueueSize(0) - 1;
+
+        
+        table.removeToken(0, 0);
+        
+        assertEquals(table.getpQueueSize(0), expectedQueueSize);
+        
     }
 
     static class MockUserInterface implements UserInterface {

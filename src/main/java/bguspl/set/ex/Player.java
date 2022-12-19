@@ -133,10 +133,10 @@ public class Player implements Runnable {
         for (int i = 0; i < keep.size(); i++) {
             tokQueue.add(keep.get(i));
         }
+                freeze = false;
         synchronized(locObject){
             
                 needToFreeze=false;
-                freeze = false;
                 locObject.notifyAll();
             
         }
@@ -160,8 +160,8 @@ public class Player implements Runnable {
                     
                     if(needToFreeze){
                         try {
+                            synchronized(locObject){
                             {
-                                synchronized(locObject){
                                 locObject.wait();}
                             }
                         } catch (InterruptedException ignored) {}}
@@ -288,7 +288,7 @@ public class Player implements Runnable {
         synchronized(locObject){
         int count = 0 ;
         
-        while(count<Table.penaltyCount)
+        while(count<env.config.penaltyFreezeMillis/1000)
         {
             env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * Table.oneSec);
             
@@ -313,6 +313,11 @@ public class Player implements Runnable {
         tokQueue.clear();
     }
 
+    public boolean getFreeze()
+    {
+        return freeze;
+    }
+
     
     public void freeze()
     {
@@ -331,6 +336,14 @@ public class Player implements Runnable {
             tokQueue.clear();
             locObject.notifyAll();
         }
+    }
+
+
+    //###################FOR_TESTS
+
+    public int get_QueueSize()
+    {
+        return tokQueue.size();
     }
     
 }
