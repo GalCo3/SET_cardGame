@@ -12,13 +12,16 @@ with a short description of:
 
 1. Fully supporting all configuration fields and avoiding the use of magic numbers
 
-We are not entitled to this bonus.
+1.
+We switched all magic numbers to static final numbers in Table class
+
 
 --------------------
 
 2. Terminating all threads (that you created) gracefully and in reverse order to the order they were created in.
 
-We are not entitled to this bonus.
+1.in Dealer terminate function we first called the player terminate function, and in player terminate function we first called the AI terminate
+3.We tested it threw the LOGS
 
 --------------------
 
@@ -35,4 +38,11 @@ We are not entitled to this bonus.
 changed on the display, key input needs to be handled, etc.) and the only threads created by you are:
 1 thread per player + 1 additional thread for non-human players.
 
-We are not entitled to this bonus.
+1.player thread is sleeping until there was a point or penalty
+    Ai thread press until it has 3 tokens on the screen and then go to sleep until he can press again(after point or penalty)
+
+2. run of both player and AI
+point, penalty,setFlag
+
+3. we tested that after 3 tokens of the ai it prints that it go to sleep, same for the player until point or penalty and than we could see that the AI presses 3 times , go to sleep, gets point or penalty, and so on.
+(We checked it and removed the tests from the code)
