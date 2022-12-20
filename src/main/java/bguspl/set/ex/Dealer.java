@@ -167,7 +167,7 @@ public class Dealer implements Runnable {
         // TODO implement
 
         synchronized(table.lock){
-        Collections.shuffle(deck);
+        // Collections.shuffle(deck);
             List<Integer> temp = new ArrayList<Integer>();
             for (int i = 0; i < env.config.tableSize & i<deck.size(); i++) {
                 table.placeCard(deck.get(i), i);
@@ -276,17 +276,15 @@ public class Dealer implements Runnable {
      */
     private void announceWinners() {
         // TODO implement
+        if(terminate)
+            return;
+        
         env.ui.setCountdown(Table.resetFreeze, false);
         int max = players[0].score();
         Queue<Integer> winners = new ConcurrentLinkedQueue<>();
 
+        terminate();
         
-
-        if(!terminate)
-        {
-            terminate();
-        }
-
         for (int i = 1; i < players.length; i++) {
             if(players[i].score() > max)
                 max = players[i].score();
@@ -304,10 +302,18 @@ public class Dealer implements Runnable {
 
 
         env.ui.announceWinner(out);
+
+        try {
+            Thread.sleep(env.config.endGamePauseMillies);
+        } catch (InterruptedException ignored) {}
+
+        env.ui.dispose();
     }
 
     public int getDeckSize()
     {
         return deck.size();
     }
+
+    
 }
