@@ -216,10 +216,10 @@ public class Table {
             pQueues[player].add(slotToCard[slot]);
             env.ui.placeToken(player, slot);
             
-            // if(pQueues[player].size()==3)
-            //     {
-            //         pIdqQueue.add(player);
-            //     }
+            if(pQueues[player].size()==3)
+                {
+                    pIdqQueue.add(player);
+                }
         }
         
     }
@@ -308,9 +308,9 @@ public class Table {
         }
     }
 
-    public void pushPid(int id){
-        pIdqQueue.add(id);
-    }
+    // public void pushPid(int id){
+    //     pIdqQueue.add(id);
+    // }
 
     public List<Integer> removeCards ()
     {

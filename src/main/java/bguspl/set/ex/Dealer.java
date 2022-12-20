@@ -52,7 +52,7 @@ public class Dealer implements Runnable {
      * The time when the dealer needs to reshuffle the deck due to turn timeout.
      */
     private long reshuffleTime = Long.MAX_VALUE;
-
+    private Thread cuThread;
     
 
 
@@ -72,7 +72,7 @@ public class Dealer implements Runnable {
     @Override
     public void run() {
         env.logger.info("Thread " + Thread.currentThread().getName() + " starting.");
-        
+        cuThread = Thread.currentThread();
         Thread [] p  =  new Thread[env.config.players];
 
         for (int i = 0; i < p.length; i++) {
@@ -96,12 +96,17 @@ public class Dealer implements Runnable {
     public void freezeAllPlayers()
     {
         synchronized(table.lock){
+        table.isInShuflle = true;
         for (int i = 0; i < players.length; i++) {
             players[i].freeze();
         }
         }
     }
 
+    public Thread getCuThread()
+    {
+        return cuThread;
+    }
 
     private void unfreezeAllPlayers()
     {
@@ -109,6 +114,7 @@ public class Dealer implements Runnable {
         for (int i = 0; i < players.length; i++) {
             players[i].unfreeze();
         }
+        table.isInShuflle = false;
         }
     }
     /**
@@ -154,7 +160,7 @@ public class Dealer implements Runnable {
         // TODO implement
         synchronized(table.lock)
         {
-            table.isInShuflle = true;
+            // table.isInShuflle = true;
             List<Integer> tableDeck = table.removeCards();
             for (int i = 0; i < tableDeck.size(); i++) {
                 deck.add(tableDeck.get(i));
@@ -170,7 +176,7 @@ public class Dealer implements Runnable {
         // TODO implement
 
         synchronized(table.lock){
-        // Collections.shuffle(deck);
+        Collections.shuffle(deck);
             List<Integer> temp = new ArrayList<Integer>();
             for (int i = 0; i < env.config.tableSize & i<deck.size(); i++) {
                 table.placeCard(deck.get(i), i);
@@ -181,7 +187,7 @@ public class Dealer implements Runnable {
             {
                 deck.remove(temp.get(i));
             }
-            table.isInShuflle = false;
+            // table.isInShuflle = false;
         }
 
 
