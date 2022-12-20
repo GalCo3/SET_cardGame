@@ -44,6 +44,7 @@ public class Dealer implements Runnable {
      * True iff game should be terminated due to an external event.
      */
     private volatile boolean terminate;
+    private volatile boolean outTerminate;
 
     private boolean wasSet;
 
@@ -62,6 +63,7 @@ public class Dealer implements Runnable {
         this.players = players;
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
         wasSet=false;
+        outTerminate = false;
     }
 
     /**
@@ -132,6 +134,7 @@ public class Dealer implements Runnable {
             players[i].terminate();
         }
         terminate = true;
+        outTerminate = true;
         // Thread.currentThread().interrupt();
     }
 
@@ -276,7 +279,7 @@ public class Dealer implements Runnable {
      */
     private void announceWinners() {
         // TODO implement
-        if(terminate)
+        if(outTerminate)
             return;
         
         env.ui.setCountdown(Table.resetFreeze, false);

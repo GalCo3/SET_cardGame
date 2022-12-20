@@ -289,7 +289,7 @@ public class Player implements Runnable {
         synchronized(locObject){
         int count = 0 ;
         
-        while(count<env.config.penaltyFreezeMillis/1000)
+        while(count<env.config.penaltyFreezeMillis/Table.oneSec)
         {
             env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * Table.oneSec);
             
@@ -330,11 +330,11 @@ public class Player implements Runnable {
 
     public void unfreeze()
     {
+        needToFreeze = false;
+        freeze = false;
+        tokQueue.clear();
         synchronized(locObject)
         {
-            needToFreeze = false;
-            freeze = false;
-            tokQueue.clear();
             locObject.notifyAll();
         }
     }
