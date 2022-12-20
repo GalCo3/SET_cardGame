@@ -140,11 +140,12 @@ public class Player implements Runnable {
         for (int i = 0; i < keep.size(); i++) {
             tokQueue.add(keep.get(i));
         }
+
         freeze = false;
         needToFreeze=false;
+
         synchronized(locObject){
-                locObject.notifyAll();
-            
+            locObject.notifyAll();
         }
     }
 
@@ -159,12 +160,7 @@ public class Player implements Runnable {
             Random rnd = new Random();
             while (!terminate) {
                 // TODO implement player key press simulator
-
-                // synchronized(locObject){
-                    keyPressed(rnd.nextInt(env.config.tableSize));//
-                   
-                // }
-                    
+                keyPressed(rnd.nextInt(env.config.tableSize));//   
                     if(needToFreeze){
                         try {
                             synchronized(locObject){
@@ -178,7 +174,6 @@ public class Player implements Runnable {
         }, "computer-" + id);
         aiThread.start();
     }
-
     /**
      * Called when the game should be terminated due to an external event.
      */
@@ -189,6 +184,7 @@ public class Player implements Runnable {
         {
             locObject.notifyAll();
         }
+
         synchronized(this)
         {
             notifyAll();
@@ -202,11 +198,8 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         // TODO implement
-        
-        
         if(!table.isInShuflle & !freeze)
-        {
-            
+        {     
             if(tokQueue.contains(slot) & table.isCard(slot))
             {
                 table.removeToken(id, slot);
@@ -215,7 +208,6 @@ public class Player implements Runnable {
             else if(table.isCard(slot) && tokQueue.size()<Table.tokenToSet)
             {
                 tokQueue.add(slot);
-
                 if(tokQueue.size()==Table.tokenToSet)
                     {
                         freeze= true;
@@ -226,12 +218,8 @@ public class Player implements Runnable {
                     }
                 else
                 table.placeToken(id, slot);
-                
             }
-            
-        }
-        
-            
+        }       
     }
 
     public void setFlag(int num)
@@ -245,21 +233,16 @@ public class Player implements Runnable {
 
     public void pointOrPenalty ()
     {
-        
         if(flag == Table.goodSet)
             {
                 point();
                 flag = Table.neutralFlag;
-                
             }
         else if(flag == Table.badSet)
             {
                 penalty();
                 flag = Table.neutralFlag;
-                
             }
-        
-        
     }
 
     /**
@@ -270,11 +253,12 @@ public class Player implements Runnable {
      */
     public void point() { /////need sync
         // TODO implement
+
         tokQueue.clear();
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
         env.ui.setFreeze(id, env.config.pointFreezeMillis);
-        // freeze = true;
+        
         try {
             Thread.sleep(env.config.pointFreezeMillis);
         } catch (InterruptedException ign) {}
@@ -284,9 +268,7 @@ public class Player implements Runnable {
         needToFreeze = false;
         synchronized(locObject){
             locObject.notifyAll();
-        }
-        
-            
+        }  
     }
 
     /**
@@ -294,13 +276,10 @@ public class Player implements Runnable {
      */
     public void penalty() { ///need sync
         // TODO implement
-        // synchronized(locObject){
         int count = 0 ;
-        
         while(count<env.config.penaltyFreezeMillis/Table.oneSec)
         {
             env.ui.setFreeze(id, env.config.penaltyFreezeMillis - count * Table.oneSec);
-            
             try {
                 Thread.sleep(Table.oneSec);
             } catch (InterruptedException ignored) {}
@@ -309,8 +288,6 @@ public class Player implements Runnable {
         freeze = false; 
         env.ui.setFreeze(id, Table.resetFreeze);
         removeNotActiveTokens();
-        // }
-        
     }
 
     public int score() {
@@ -327,13 +304,10 @@ public class Player implements Runnable {
         return freeze;
     }
 
-    
     public void freeze()
     {
-        // synchronized(locObject){
         needToFreeze = true;
         freeze = true;
-        // }
     }
 
     public void unfreeze()

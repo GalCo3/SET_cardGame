@@ -55,8 +55,6 @@ public class Dealer implements Runnable {
     private Thread cuThread;
     
 
-
-
     public Dealer(Env env, Table table, Player[] players) {
         this.env = env;
         this.table = table;
@@ -128,9 +126,6 @@ public class Dealer implements Runnable {
         }
     }
 
-    
-
-    
     /**
      * Called when the game should be terminated due to an external event.
      */
@@ -168,13 +163,11 @@ public class Dealer implements Runnable {
         }
     }
 
-
     /**
      * Check if any cards can be removed from the deck and placed on the table.
      */
     public void placeCardsOnTable() {
         // TODO implement
-
         synchronized(table.lock){
         Collections.shuffle(deck);
             List<Integer> temp = new ArrayList<Integer>();
@@ -187,15 +180,8 @@ public class Dealer implements Runnable {
             {
                 deck.remove(temp.get(i));
             }
-            // table.isInShuflle = false;
         }
-
-
     }
-
-
-
-
 
     /**
      * Sleep for a fixed amount of time or until the thread is awakened for some purpose.
@@ -238,8 +224,6 @@ public class Dealer implements Runnable {
                     if(table.empty_Table())
                         terminate = true;
                 }
-                
-                
             }
             else
             {
@@ -252,7 +236,6 @@ public class Dealer implements Runnable {
         {
             players[check[Table.secondTupleElm]].removeNotActiveTokens();
         }
-
     }
 
     /**
@@ -309,7 +292,6 @@ public class Dealer implements Runnable {
             out[i] = winners.poll();
         }
 
-
         env.ui.announceWinner(out);
 
         try {
@@ -323,6 +305,4 @@ public class Dealer implements Runnable {
     {
         return deck.size();
     }
-
-    
 }
