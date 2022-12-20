@@ -72,7 +72,7 @@ public class Table {
     public static final int oneSec = 1000;
     public static final int delay = 300;
     public static final int tenSec = 10000;
-    public static final int dealerTurnSleep = 100;
+    public static final int dealerTurnSleep = 50;
 
     public static final int neutralFlag = 0;
     public static final int tie = 2;

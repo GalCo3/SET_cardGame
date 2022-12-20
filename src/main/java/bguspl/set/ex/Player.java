@@ -213,8 +213,9 @@ public class Player implements Runnable {
                         freeze= true;
                         needToFreeze = true;
                         table.placeToken(id, slot);
-                        dealThread.interrupt();
-                        // table.pushPid(id);
+                        if(dealer.sleeps)
+                            dealThread.interrupt();
+                        
                     }
                 else
                 table.placeToken(id, slot);

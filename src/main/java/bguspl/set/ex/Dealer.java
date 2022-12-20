@@ -45,6 +45,7 @@ public class Dealer implements Runnable {
      */
     private volatile boolean terminate;
     private volatile boolean outTerminate;
+    protected volatile boolean sleeps;
 
     private boolean wasSet;
 
@@ -62,6 +63,7 @@ public class Dealer implements Runnable {
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
         wasSet=false;
         outTerminate = false;
+        sleeps = false;
     }
 
     /**
@@ -189,9 +191,12 @@ public class Dealer implements Runnable {
     private void sleepUntilWokenOrTimeout() {
 
         try {
+            sleeps = true;
             Thread.sleep(Table.dealerTurnSleep);
         } catch (InterruptedException ignored) {}
-
+        sleeps = false;
+        
+            
         int [] check=table.checkSet();
         wasSet = false;
 
