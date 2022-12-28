@@ -260,9 +260,16 @@ public class Player implements Runnable {
         env.ui.setScore(id, ++score);
         env.ui.setFreeze(id, env.config.pointFreezeMillis);
         
-        try {
-            Thread.sleep(env.config.pointFreezeMillis);
-        } catch (InterruptedException ign) {}
+        int count = 0 ;
+        while(count<env.config.pointFreezeMillis/Table.oneSec)
+        {
+            env.ui.setFreeze(id, env.config.pointFreezeMillis - count * Table.oneSec);
+            try {
+                Thread.sleep(Table.oneSec);
+            } catch (InterruptedException i) {}
+            count++;
+        } 
+
         freeze = false;
         env.ui.setFreeze(id, Table.resetFreeze);
         

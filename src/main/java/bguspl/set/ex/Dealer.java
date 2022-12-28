@@ -72,6 +72,7 @@ public class Dealer implements Runnable {
     @Override
     public void run() {
         env.logger.info("Thread " + Thread.currentThread().getName() + " starting.");
+
         cuThread = Thread.currentThread();
         Thread [] p  =  new Thread[env.config.players];
 
