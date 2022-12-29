@@ -189,9 +189,6 @@ public class Table {
             Thread.sleep(env.config.tableDelayMillis);
         } catch (InterruptedException ignored) {}
 
-
-        env.ui.removeCard(slot);
-        // TODO implement
         for (int i = 0; i < pQueues.length; i++) {
             if(pQueues[i].contains(slotToCard[slot]))
             {
@@ -200,6 +197,9 @@ public class Table {
                 env.ui.removeToken(i, slot);
             }
         }
+
+        env.ui.removeCard(slot);
+        // TODO implement
         slotToCard[slot] = Table.emptySlot;
     }
 
@@ -272,9 +272,11 @@ public class Table {
                 ////// good
 
                 /// remove cards
+                // synchronized(lock){
                 for (int i = 0; i < playersCards.length; i++) {
                     removeCard(cardToSlot[playersCards[i]]);
                 }
+                // }
                 pQueues[playerId].clear();
                 ///score player
                 out[Table.firstTupleElm] = Table.goodSet;
@@ -322,7 +324,7 @@ public class Table {
                 {
                     out.add(slotToCard[i]);
                     removeCard(i);
-                    env.ui.removeCard(i);
+                    // env.ui.removeCard(i);
                 }
         }
         for (int i = 0; i < pQueues.length; i++) {
